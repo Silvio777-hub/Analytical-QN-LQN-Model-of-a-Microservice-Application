@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+temp_docx/
+get-pip.py
+*.pyc
+*.pdf
+*.docx
+*.pptx
+ruff_out.txt
+ruff_report.txt

@@ -1,0 +1,227 @@
+# Google Online Boutique + Monitoring Stack
+# Docker Compose deployment for SPE Project #2
+#
+# Services:
+#   - All 11 Online Boutique microservices
+#   - Prometheus (metrics collection)
+#   - Jaeger (distributed tracing)
+#   - Grafana (dashboards, optional)
+#   - Load Generator (built-in)
+#
+# Usage:
+#   docker-compose up -d        # Start all services
+#   docker-compose down         # Stop and remove all services
+#   docker-compose logs -f      # Follow logs
+#
+# Access:
+#   Frontend:    http://localhost:8080
+#   Prometheus:  http://localhost:9090
+#   Jaeger UI:   http://localhost:16686
+#   Grafana:     http://localhost:3000
+
+services:
+
+  # ─── ONLINE BOUTIQUE MICROSERVICES ──────────────────────────────────
+
+  frontend:
+    image: gcr.io/google-samples/microservices-demo/frontend:v0.10.1
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      AD_SERVICE_ADDR: "adservice:9555"
+      CART_SERVICE_ADDR: "cartservice:7070"
+      CHECKOUT_SERVICE_ADDR: "checkoutservice:5050"
+      CURRENCY_SERVICE_ADDR: "currencyservice:7000"
+      PRODUCT_CATALOG_SERVICE_ADDR: "productcatalogservice:3550"
+      RECOMMENDATION_SERVICE_ADDR: "recommendationservice:8080"
+      SHIPPING_SERVICE_ADDR: "shippingservice:50051"
+      SHOPPING_ASSISTANT_SERVICE_ADDR: "none"
+      DISABLE_TRACING: "0"
+      ENABLE_TRACING: "1"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "frontend"
+      CYMBAL_BRANDING: "false"
+    depends_on:
+      - adservice
+      - cartservice
+      - checkoutservice
+      - currencyservice
+      - productcatalogservice
+      - recommendationservice
+      - shippingservice
+
+  cartservice:
+    image: gcr.io/google-samples/microservices-demo/cartservice:v0.10.1
+    environment:
+      REDIS_ADDR: "redis-cart:6379"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "cartservice"
+    depends_on:
+      - redis-cart
+
+  productcatalogservice:
+    image: gcr.io/google-samples/microservices-demo/productcatalogservice:v0.10.1
+    environment:
+      PORT: "3550"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "productcatalogservice"
+      DISABLE_TRACING: "0"
+      DISABLE_PROFILER: "1"
+
+  currencyservice:
+    image: gcr.io/google-samples/microservices-demo/currencyservice:v0.10.1
+    environment:
+      PORT: "7000"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "currencyservice"
+      DISABLE_TRACING: "0"
+      DISABLE_PROFILER: "1"
+
+  paymentservice:
+    image: gcr.io/google-samples/microservices-demo/paymentservice:v0.10.1
+    environment:
+      PORT: "50051"
+      DISABLE_PROFILER: "1"
+      DISABLE_TRACING: "0"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "paymentservice"
+
+  shippingservice:
+    image: gcr.io/google-samples/microservices-demo/shippingservice:v0.10.1
+    environment:
+      PORT: "50051"
+      DISABLE_PROFILER: "1"
+      DISABLE_TRACING: "0"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "shippingservice"
+
+  emailservice:
+    image: gcr.io/google-samples/microservices-demo/emailservice:v0.10.1
+    environment:
+      PORT: "8080"
+      DISABLE_PROFILER: "1"
+      DISABLE_TRACING: "0"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "emailservice"
+
+  checkoutservice:
+    image: gcr.io/google-samples/microservices-demo/checkoutservice:v0.10.1
+    environment:
+      PORT: "5050"
+      PRODUCT_CATALOG_SERVICE_ADDR: "productcatalogservice:3550"
+      SHIPPING_SERVICE_ADDR: "shippingservice:50051"
+      PAYMENT_SERVICE_ADDR: "paymentservice:50051"
+      EMAIL_SERVICE_ADDR: "emailservice:8080"
+      CURRENCY_SERVICE_ADDR: "currencyservice:7000"
+      CART_SERVICE_ADDR: "cartservice:7070"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "checkoutservice"
+      DISABLE_TRACING: "0"
+      DISABLE_PROFILER: "1"
+
+  recommendationservice:
+    image: gcr.io/google-samples/microservices-demo/recommendationservice:v0.10.1
+    environment:
+      PORT: "8080"
+      PRODUCT_CATALOG_SERVICE_ADDR: "productcatalogservice:3550"
+      DISABLE_PROFILER: "1"
+      DISABLE_TRACING: "0"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "recommendationservice"
+
+  adservice:
+    image: gcr.io/google-samples/microservices-demo/adservice:v0.10.1
+    environment:
+      PORT: "9555"
+      COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "adservice"
+      DISABLE_STATS: "1"
+      DISABLE_TRACING: "0"
+
+  redis-cart:
+    image: redis:7-alpine
+
+
+  # ─── LOAD GENERATOR ────────────────────────────────────────────────
+
+  loadgenerator:
+    image: gcr.io/google-samples/microservices-demo/loadgenerator:v0.10.1
+    environment:
+      FRONTEND_ADDR: "frontend:8080"
+      USERS: "10"
+      JAEGER_SERVICE_ADDR: "jaeger:14268"
+    depends_on:
+      - frontend
+
+  # ─── MONITORING STACK ───────────────────────────────────────────────
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "14268:14268" # Jaeger collector HTTP
+      - "14250:14250" # Jaeger collector gRPC
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=1h'
+    depends_on:
+      - frontend
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    ports:
+      - "3100:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    depends_on:
+      - prometheus
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=10s
+    ports:
+      - "8081:8080"
+    depends_on:
+      - prometheus
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8889:8889"
+    depends_on:
+      - jaeger

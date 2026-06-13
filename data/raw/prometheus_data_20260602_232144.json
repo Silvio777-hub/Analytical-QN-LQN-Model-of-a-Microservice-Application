@@ -1,0 +1,39 @@
+{
+  "timestamp": "20260602_232144",
+  "request_rates": {
+    "Frontend": 9.106277728184256,
+    "ProductCatalogService": 0.0,
+    "CurrencyService": 0.0,
+    "CartService": 0.0,
+    "RecommendationService": 0.0,
+    "AdService": 0.0,
+    "CheckoutService": 0.0,
+    "ShippingService": 0.0,
+    "PaymentService": 0.0,
+    "EmailService": 0.0
+  },
+  "response_times": {
+    "Frontend": 0.01842562168327759,
+    "ProductCatalogService": 0.0,
+    "CurrencyService": 0.0,
+    "CartService": 0.0,
+    "RecommendationService": 0.0,
+    "AdService": 0.0,
+    "CheckoutService": 0.0,
+    "ShippingService": 0.0,
+    "PaymentService": 0.0,
+    "EmailService": 0.0
+  },
+  "cpu_utilization": {
+    "Frontend": 0.0,
+    "ProductCatalogService": 0.0,
+    "CurrencyService": 0.0,
+    "CartService": 0.0,
+    "RecommendationService": 0.0,
+    "AdService": 0.0,
+    "CheckoutService": 0.0,
+    "ShippingService": 0.0,
+    "PaymentService": 0.0,
+    "EmailService": 0.0
+  }
+}

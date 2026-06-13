@@ -1,0 +1,10 @@
+{
+  "Frontend": {
+    "mean_service_time": 0.11667262187812188,
+    "median_service_time": 0.014749499999999999,
+    "p95_service_time": 0.45112939999999996,
+    "p99_service_time": 1.907623449999995,
+    "std_service_time": 0.48480988721128365,
+    "sample_count": 4004
+  }
+}

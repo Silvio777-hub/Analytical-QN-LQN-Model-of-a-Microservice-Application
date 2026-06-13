@@ -1,0 +1,11 @@
+service,request_rate,mean_response_time_s,cpu_utilization
+Frontend,5.0,0.285,0.58
+ProductCatalogService,2.188,0.0082,0.0109
+CurrencyService,1.038,0.0051,0.0031
+CartService,0.787,0.0068,0.0032
+RecommendationService,0.5,0.0124,0.0040
+AdService,0.4,0.0091,0.0024
+CheckoutService,0.25,0.0225,0.0037
+ShippingService,0.287,0.0072,0.0011
+PaymentService,0.05,0.0143,0.0005
+EmailService,0.037,0.0180,0.0004

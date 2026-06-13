@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+numpy
+pandas
+matplotlib
+scipy
+requests
+seaborn
+pyyaml
+pytest

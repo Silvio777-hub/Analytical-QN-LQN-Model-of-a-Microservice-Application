@@ -1,0 +1,15 @@
+{
+  "timestamp": "20260528_222944",
+  "routing_probabilities": {},
+  "service_demands": {
+    "Frontend": {
+      "mean_service_time": 0.009138484668455347,
+      "median_service_time": 0.001496,
+      "p95_service_time": 0.01860519999999996,
+      "p99_service_time": 0.12796960999999996,
+      "std_service_time": 0.08162294032075454,
+      "sample_count": 5218
+    }
+  },
+  "dependency_graph": {}
+}

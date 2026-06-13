@@ -1,0 +1,25 @@
+{
+  "Frontend": {
+    "ProductCatalogService": 0.35,
+    "CurrencyService": 0.2,
+    "CartService": 0.15,
+    "RecommendationService": 0.1,
+    "AdService": 0.08,
+    "CheckoutService": 0.05,
+    "ShippingService": 0.05
+  },
+  "CartService": {
+    "Redis": 0.95
+  },
+  "RecommendationService": {
+    "ProductCatalogService": 0.8
+  },
+  "CheckoutService": {
+    "ProductCatalogService": 0.15,
+    "CurrencyService": 0.15,
+    "CartService": 0.15,
+    "ShippingService": 0.15,
+    "PaymentService": 0.2,
+    "EmailService": 0.15
+  }
+}
