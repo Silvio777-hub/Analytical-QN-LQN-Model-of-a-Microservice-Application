@@ -5,30 +5,6 @@
 Develop an analytical queueing network model of **Google Online Boutique** (11 microservices)
 and validate predictions against empirical measurements.
 
----
-
-## Table of Contents
-
-1. [Architecture Overview](#architecture-overview)
-2. [Project Structure](#project-structure)
-3. [Prerequisites](#prerequisites)
-4. [Environment Setup](#environment-setup)
-5. [Deploying the Online Boutique (Monitoring Stack)](#deploying-the-online-boutique-monitoring-stack)
-6. [Running a Load Test](#running-a-load-test)
-7. [Collecting Empirical Metrics](#collecting-empirical-metrics)
-8. [Running the Queueing Network Model](#running-the-queueing-network-model)
-9. [Validating Predictions Against Measurements](#validating-predictions-against-measurements)
-10. [Running the Full Workflow (CLI)](#running-the-full-workflow-cli)
-11. [FastAPI Server & Web Dashboard](#fastapi-server--web-dashboard)
-12. [Running via Docker (Optional)](#running-via-docker-optional)
-13. [Running Tests](#running-tests)
-14. [Monitoring Interfaces](#monitoring-interfaces)
-15. [Methodology](#methodology)
-16. [Project Report](#project-report)
-17. [Troubleshooting](#troubleshooting)
-
----
-
 ## Architecture Overview
 
 Google Online Boutique is a cloud-native demo application with 11 microservices:
@@ -46,63 +22,6 @@ Google Online Boutique is a cloud-native demo application with 11 microservices:
 | RecommendationService| Python   | Recommends products based on cart          |
 | AdService            | Java     | Provides text ads based on context         |
 | Redis                | -        | In-memory store for cart data              |
-
----
-
-## Project Structure
-
-```
-PROJECT/
-├── README.md                              # This file
-├── Dockerfile                             # Container image for analysis scripts
-├── requirements.txt                       # Python dependencies
-│
-├── api/
-│   ├── app.py                             # FastAPI REST API (solve model, get measurements)
-│   └── static/
-│       └── index.html                     # SPE Observatory Hub web dashboard
-│
-├── cli/
-│   └── run_all.py                         # CLI runner: collect → solve → validate → serve
-│
-├── scripts/
-│   ├── model/
-│   │   ├── queueing_network.py            # Main QN model definition & analysis
-│   │   ├── mva_solver.py                  # Core Open-network MVA solver (M/M/1 & M/M/c)
-│   │   └── queueing_network_parameters.json  # Saved model parameters for the API
-│   ├── data_collection/
-│   │   ├── collect_metrics.py             # Scrape Prometheus for service metrics
-│   │   └── parse_traces.py               # Extract routing probabilities from Jaeger
-│   ├── validation/
-│   │   └── compare.py                     # Compare predictions vs. measurements + plots
-│   └── load_testing/
-│       ├── run_load_test.ps1              # PowerShell load test monitor (Windows)
-│       └── run_load_test.sh               # Bash load test monitor (Linux/macOS)
-│
-├── deployment/
-│   ├── docker-compose.yaml                # Online Boutique + Monitoring (Prometheus, Jaeger, Grafana)
-│   ├── prometheus.yml                     # Prometheus scrape config
-│   ├── otel-collector-config.yaml         # OpenTelemetry Collector routing
-│   └── grafana/                           # Grafana provisioning (dashboards/datasources)
-│
-├── data/
-│   ├── processed/                         # Cleaned metrics CSVs, service_times.json, routing_probabilities.json
-│   └── raw/                               # Raw Prometheus JSON exports
-│
-├── results/
-│   ├── model_predictions.json             # MVA solver output
-│   └── figures/                           # Generated plots (utilization, response time, etc.)
-│
-├── tests/
-│   ├── test_solver.py                     # Unit tests for the MVA solver
-│   └── test_api.py                        # Integration tests for the FastAPI API
-│
-└── docs/
-    ├── FINAL_REPORT.md                    # Comprehensive project report
-    ├── model_description.md               # QN diagram + formulas
-    ├── validation_report.md               # Predictions vs. measurements analysis
-    └── Explanation.md                     # Supplementary explanation
-```
 
 ---
 
@@ -125,7 +44,16 @@ PROJECT/
 
 ```bash
 git clone <repository-url>
-cd SPE-Project
+```
+
+**Windows (PowerShell) — path contains spaces, so use quotes:**
+```powershell
+cd "Analytical QNLQN Model of a Microservice Application"
+```
+
+**Linux / macOS:**
+```bash
+cd "Analytical QNLQN Model of a Microservice Application"
 ```
 
 ### 2. Create a Python Virtual Environment
@@ -235,6 +163,12 @@ docker-compose restart loadgenerator
 Use the provided scripts to monitor the load test and wait for data collection:
 
 **Windows (PowerShell):**
+
+> **⚠️ Windows Execution Policy:** By default, Windows restricts running unsigned PowerShell scripts. If you see an `UnauthorizedAccess` error, run the following command **once** in your current PowerShell window to bypass the restriction for that session:
+> ```powershell
+> Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+> ```
+
 ```powershell
 .\scripts\load_testing\run_load_test.ps1                     # Default: 10 users, 5 minutes
 .\scripts\load_testing\run_load_test.ps1 -Users 20 -Duration 600   # 20 users, 10 minutes
@@ -422,13 +356,28 @@ The project includes a REST API and a web-based dashboard for interactive explor
 
 ### Start the API Server
 
+> ⚠️ **Run from the project root directory** (not from `deployment/` or any subdirectory).
+
+**Windows (PowerShell):**
+```powershell
+# Activate the virtual environment first
+.\.venv\Scripts\Activate.ps1
+
+# Start the server
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Linux / macOS:**
 ```bash
-uvicorn api.app:app --host 0.0.0.0 --port 8000
+source .venv/bin/activate
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Then open:
 - **Web Dashboard:** http://localhost:8000  
 - **API Docs (Swagger):** http://localhost:8000/docs  
+
+The `--reload` flag automatically restarts the server when source files change (useful during development). Remove it for production.
 
 ### API Endpoints
 
@@ -467,6 +416,29 @@ curl -X POST http://localhost:8000/solve \
   }
 }
 ```
+
+#### `POST /api/v1/scale-prediction`
+
+Scale-aware prediction with per-service replica overrides and Erlang-C queueing probabilities:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/scale-prediction \
+  -H "Content-Type: application/json" \
+  -d '{"lambda": 10.0}'
+```
+
+With replica overrides:
+```bash
+curl -X POST http://localhost:8000/api/v1/scale-prediction \
+  -H "Content-Type: application/json" \
+  -d '{"lambda": 10.0, "replicas": {"frontend": 2, "checkoutservice": 3}}'
+```
+
+**Response fields:**
+- `utilization` — per-service ρᵢ (offered load)
+- `P_Q` — Erlang-C queueing probability at each service centre
+- `response_time_ms` — per-service mean response time (ms)
+- `queue_length` — mean number of requests in system (Little's Law)
 
 #### `GET /measurements`
 
@@ -537,17 +509,61 @@ pytest tests/test_api.py -v       # FastAPI integration tests
 
 ---
 
+## Service Dashboard
+
+The project includes an **HTML Service Dashboard** (`dashboard.html`) that acts as a single entry point to every running interface. Instead of remembering ports and URLs, just open the dashboard and click the service you want to visit.
+
+### Opening the Dashboard
+
+**Option 1 — Double-click in File Explorer:**
+
+Navigate to the project root folder and double-click **`dashboard.html`**. It opens in your default browser.
+
+**Option 2 — From PowerShell:**
+
+```powershell
+Invoke-Item "dashboard.html"
+```
+
+**Option 3 — Paste in your browser address bar:**
+
+```
+file:///C:/Users/7172981/Downloads/Analytical%20QNLQN%20Model%20of%20a%20Microservice%20Application/dashboard.html
+```
+
+### What the Dashboard Links To
+
+| Card                       | URL                              | Description                                              |
+|----------------------------|----------------------------------|----------------------------------------------------------|
+| **Online Boutique Frontend** | http://localhost:8080           | The e-commerce web app — browse, add to cart, checkout   |
+| **QN Model API (FastAPI)** | http://localhost:8000             | REST API for the queueing-network solver                 |
+| **API Docs (Swagger UI)**  | http://localhost:8000/docs        | Interactive OpenAPI documentation                        |
+| **Prometheus**             | http://localhost:9090             | Metrics querying (PromQL)                                |
+| **Prometheus Targets**     | http://localhost:9090/targets     | Scrape target health check — verify all targets are UP   |
+| **Jaeger UI**              | http://localhost:16686            | Distributed tracing — explore traces and latencies       |
+| **Grafana**                | http://localhost:3100             | Visual dashboards (credentials: `admin` / `admin`)       |
+| **cAdvisor**               | http://localhost:8081             | Container CPU, memory, and network I/O stats             |
+| **OTel Collector Metrics** | http://localhost:8889/metrics     | OpenTelemetry pipeline health metrics                    |
+
+> **Tip:** Make sure Docker Compose is running (`docker-compose up -d` in the `deployment/` folder) before clicking the cards, otherwise the services won't be reachable.
+
+---
+
 ## Monitoring Interfaces
 
 When the Docker Compose stack is running, the following UIs are available:
 
-| Interface     | URL                        | Credentials             |
-|---------------|----------------------------|--------------------------|
-| **Frontend**  | http://localhost:8080       | —                        |
-| **Prometheus**| http://localhost:9090       | —                        |
-| **Jaeger UI** | http://localhost:16686      | —                        |
-| **Grafana**   | http://localhost:3100       | admin / admin            |
-| **cAdvisor**  | http://localhost:8081       | —                        |
+| Interface              | URL                              | Credentials              |
+|------------------------|----------------------------------|--------------------------|
+| **Frontend**           | http://localhost:8080             | —                        |
+| **Prometheus**         | http://localhost:9090             | —                        |
+| **Prometheus Targets** | http://localhost:9090/targets     | —                        |
+| **Jaeger UI**          | http://localhost:16686            | —                        |
+| **Grafana**            | http://localhost:3100             | admin / admin            |
+| **cAdvisor**           | http://localhost:8081             | —                        |
+| **OTel Collector**     | http://localhost:8889/metrics     | —                        |
+| **QN Model API**       | http://localhost:8000             | —                        |
+| **API Docs (Swagger)** | http://localhost:8000/docs        | —                        |
 
 ### Useful Prometheus Queries
 
@@ -592,35 +608,127 @@ Additional documentation:
 
 ## Troubleshooting
 
-### Docker Compose fails to start
+### 1. PowerShell Script Error: `UnauthorizedAccess` (Windows)
+
+**Symptom:** Running `.\scripts\load_testing\run_load_test.ps1` fails with:
+```
+File ... is not digitally signed. You cannot run this script on the current system.
+```
+
+**Cause:** Windows restricts execution of unsigned PowerShell scripts by default.
+
+**Fix:** Run the following command **once** in your current PowerShell window to temporarily allow script execution for that session only:
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+Then retry:
+```powershell
+.\scripts\load_testing\run_load_test.ps1
+```
+
+> **Note:** The `-Scope Process` flag limits the change to the current terminal session. It does not modify the system-wide policy and reverts automatically when you close the window.
+
+---
+
+### 2. `collect_metrics.py` / `run_all.py` Reports All Zeros
+
+**Symptom:** Running `python cli/run_all.py --arrival 10` fails with:
+```
+Warning: No rate data for frontend
+Warning: No rate data for productcatalogservice
+...
+RuntimeError: All collected metrics are zero.
+```
+
+**Cause:** Prometheus needs a steady stream of traffic for at least **3–5 minutes** to accurately calculate per-second rates (`req/s`) and latencies. If you run `run_all.py` too soon after `docker-compose up -d`, Prometheus has not yet accumulated enough data and returns empty results.
+
+**Fix — Step by Step:**
+
+1. **(If needed)** Bypass the PowerShell execution policy:
+   ```powershell
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+   ```
+2. Run the load-test monitor script (this waits 5 minutes while the load generator produces traffic):
+   ```powershell
+   .\scripts\load_testing\run_load_test.ps1
+   ```
+   Alternatively, you can simply **wait 5 minutes** after `docker-compose up -d` without running the script.
+3. Once the 5-minute wait is complete, run the full workflow:
+   ```powershell
+   python cli/run_all.py --arrival 10
+   ```
+
+> **Tip:** You can verify that Prometheus is receiving data by opening http://localhost:9090/targets in your browser. All targets should show **State = UP**.
+
+---
+
+### 3. Docker Compose Fails to Start
 - Make sure Docker Desktop is running.
 - Ensure ports `8080`, `9090`, `16686`, `3100`, `8081` are not in use.
 - Try `docker-compose down` then `docker-compose up -d` again.
 
-### Prometheus returns no data
-- Wait at least **2–3 minutes** after starting the stack for scrape intervals to kick in.
+---
+
+### 4. Prometheus Returns No Data (After Waiting)
 - Verify the services are running: `docker-compose ps`.
-- Check the Prometheus targets page: http://localhost:9090/targets.
+- Check the Prometheus targets page: http://localhost:9090/targets — all targets should show **UP**.
+- If targets show **DOWN**, restart the monitoring stack:
+  ```bash
+  cd deployment
+  docker-compose down
+  docker-compose up -d
+  ```
+  Then wait 5 minutes before collecting metrics.
 
-### `collect_metrics.py` reports all zeros
-- The monitoring stack must be running and the load generator must be producing traffic.
-- Make sure you've waited long enough for rate calculations (at least 5 minutes of data).
+---
 
-### `ModuleNotFoundError` when running scripts
+### 5. `ModuleNotFoundError` When Running Scripts
 - Make sure you've activated the virtual environment and installed dependencies:
   ```bash
-  source .venv/bin/activate   # or .\.venv\Scripts\Activate.ps1 on Windows
+  source .venv/bin/activate   # Linux / macOS
+  .\.venv\Scripts\Activate.ps1   # Windows PowerShell
   pip install -r requirements.txt
   ```
 
-### API server can't find `queueing_network_parameters.json`
+---
+
+### 6. API Server Can't Find `queueing_network_parameters.json`
 - Run the model with `--save` first to generate the parameters file:
   ```bash
   python scripts/model/queueing_network.py --save
   ```
 
-### Tests fail with import errors
+---
+
+### 7. Tests Fail with Import Errors
 - Run tests from the project root directory:
   ```bash
   pytest tests/ -v
   ```
+
+---
+
+### 8. `PydanticUserError: "Config" and "model_config" cannot be used together`
+
+**Symptom:** Uvicorn fails to start with:
+```
+pydantic.errors.PydanticUserError: "Config" and "model_config" cannot be used together
+```
+
+**Cause:** A Pydantic v2 model has both an inner `class Config` (v1 style) and `model_config` (v2 style) defined simultaneously.
+
+**Fix:** This has already been resolved in `api/app.py`. If you see it again after modifying models, ensure each `BaseModel` subclass uses **only** `model_config` (v2 style) and `Field(alias=...)` — never the old inner `class Config`.
+
+---
+
+### 9. `CommandNotFoundException: vicorn` / Typo in uvicorn command
+
+**Symptom:**
+```
+The term 'vicorn' is not recognized...
+```
+
+**Fix:** The correct command is `uvicorn` (with a leading `u`). Always run it from the **project root** directory:
+```powershell
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+```

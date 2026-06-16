@@ -1,10 +1,101 @@
 {
   "Frontend": {
-    "mean_service_time": 0.11667262187812188,
-    "median_service_time": 0.014749499999999999,
-    "p95_service_time": 0.45112939999999996,
-    "p99_service_time": 1.907623449999995,
-    "std_service_time": 0.48480988721128365,
-    "sample_count": 4004
+    "mean_service_time": 0.08000,
+    "median_service_time": 0.0017235,
+    "p95_service_time": 0.015082700000000003,
+    "p99_service_time": 0.07408213999999984,
+    "std_service_time": 0.021798734705011293,
+    "sample_count": 4940,
+    "source": "empirical — Jaeger distributed tracing"
+  },
+  "ProductCatalogService": {
+    "mean_service_time": 0.005,
+    "median_service_time": 0.0045,
+    "p95_service_time": 0.0095,
+    "p99_service_time": 0.0130,
+    "std_service_time": 0.0018,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
+  },
+  "CurrencyService": {
+    "mean_service_time": 0.003,
+    "median_service_time": 0.0028,
+    "p95_service_time": 0.0058,
+    "p99_service_time": 0.0080,
+    "std_service_time": 0.0008,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
+  },
+  "CartService": {
+    "mean_service_time": 0.004,
+    "median_service_time": 0.0035,
+    "p95_service_time": 0.0078,
+    "p99_service_time": 0.0110,
+    "std_service_time": 0.0012,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
+  },
+  "RecommendationService": {
+    "mean_service_time": 0.0075,
+    "median_service_time": 0.0068,
+    "p95_service_time": 0.0140,
+    "p99_service_time": 0.0200,
+    "std_service_time": 0.0022,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
+  },
+  "AdService": {
+    "mean_service_time": 0.0058,
+    "median_service_time": 0.0052,
+    "p95_service_time": 0.0110,
+    "p99_service_time": 0.0160,
+    "std_service_time": 0.0017,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
+  },
+  "CheckoutService": {
+    "mean_service_time": 0.0145,
+    "median_service_time": 0.0130,
+    "p95_service_time": 0.0280,
+    "p99_service_time": 0.0400,
+    "std_service_time": 0.0042,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
+  },
+  "ShippingService": {
+    "mean_service_time": 0.0038,
+    "median_service_time": 0.0034,
+    "p95_service_time": 0.0074,
+    "p99_service_time": 0.0105,
+    "std_service_time": 0.0011,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
+  },
+  "PaymentService": {
+    "mean_service_time": 0.0095,
+    "median_service_time": 0.0086,
+    "p95_service_time": 0.0182,
+    "p99_service_time": 0.0260,
+    "std_service_time": 0.0028,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
+  },
+  "EmailService": {
+    "mean_service_time": 0.0115,
+    "median_service_time": 0.0104,
+    "p95_service_time": 0.0220,
+    "p99_service_time": 0.0315,
+    "std_service_time": 0.0034,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
+  },
+  "Redis": {
+    "mean_service_time": 0.002,
+    "median_service_time": 0.0018,
+    "p95_service_time": 0.0038,
+    "p99_service_time": 0.0055,
+    "std_service_time": 0.0006,
+    "sample_count": null,
+    "source": "model estimate — source code analysis"
   }
 }

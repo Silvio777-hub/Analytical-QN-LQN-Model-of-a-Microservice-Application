@@ -25,9 +25,8 @@ import os
 from collections import defaultdict
 from datetime import datetime
 
-import requests
 import numpy as np
-
+import requests
 
 JAEGER_URL = "http://localhost:16686"
 
@@ -82,7 +81,7 @@ def fetch_traces(jaeger_url: str, service: str, limit: int = 500) -> list:
                 "limit": str(limit),
                 "lookback": "1h",
             },
-            timeout=30
+            timeout=30,
         )
         resp.raise_for_status()
         data = resp.json()
@@ -117,7 +116,7 @@ def parse_trace(trace: dict) -> tuple:
             "start_time_us": start_time_us,
             "end_time_us": start_time_us + duration_us,
             "refs": span.get("references", []),
-            "child_intervals": []
+            "child_intervals": [],
         }
 
     edges = []
@@ -136,8 +135,13 @@ def parse_trace(trace: dict) -> tuple:
                         edges.append((parent_service, service))
 
                     # Clip child interval to parent boundary to handle potential clock skews
-                    child_start = max(parent_info["start_time_us"], span_info["start_time_us"])
-                    child_end = min(parent_info["end_time_us"], span_info["end_time_us"])
+                    child_start = max(
+                        parent_info["start_time_us"],
+                        span_info["start_time_us"],
+                    )
+                    child_end = min(
+                        parent_info["end_time_us"], span_info["end_time_us"]
+                    )
                     if child_start < child_end:
                         parent_info["child_intervals"].append((child_start, child_end))
 
@@ -211,10 +215,25 @@ def compute_service_demands(all_durations: dict) -> dict:
     return demands
 
 
-def save_results(routing: dict, demands: dict, dep_graph: dict,
-                 output_dir: str = "data/processed"):
+def save_results(
+    routing: dict,
+    demands: dict,
+    dep_graph: dict,
+    output_dir: str = "data/processed",
+):
     if not routing and not demands and not dep_graph:
-        print("\nWarning: No trace data parsed. Skipping saving empty results files to prevent clutter.")
+        print(
+            "\nWarning: No trace data parsed. Skipping saving empty results files to prevent clutter."
+        )
+        return
+
+    if len(demands) < 5:
+        print(
+            f"\n[WARNING] Only {len(demands)} services found in traces. Tracing data appears incomplete."
+        )
+        print(
+            "Skipping saving to data/processed to prevent overwriting valid empirical data with broken data."
+        )
         return
 
     os.makedirs(output_dir, exist_ok=True)
@@ -222,19 +241,19 @@ def save_results(routing: dict, demands: dict, dep_graph: dict,
 
     # Save routing probabilities
     rp_file = os.path.join(output_dir, "routing_probabilities.json")
-    with open(rp_file, 'w') as f:
+    with open(rp_file, "w") as f:
         json.dump(routing, f, indent=2)
     print(f"  Routing probabilities: {rp_file}")
 
     # Save service demands
     sd_file = os.path.join(output_dir, "service_demands.json")
-    with open(sd_file, 'w') as f:
+    with open(sd_file, "w") as f:
         json.dump(demands, f, indent=2)
     print(f"  Service demands: {sd_file}")
 
     # Save dependency graph
     dg_file = os.path.join(output_dir, f"dependency_graph_{timestamp}.json")
-    with open(dg_file, 'w') as f:
+    with open(dg_file, "w") as f:
         json.dump(dep_graph, f, indent=2)
     print(f"  Dependency graph: {dg_file}")
 
@@ -242,13 +261,17 @@ def save_results(routing: dict, demands: dict, dep_graph: dict,
     raw_dir = "data/raw"
     os.makedirs(raw_dir, exist_ok=True)
     raw_file = os.path.join(raw_dir, f"trace_data_{timestamp}.json")
-    with open(raw_file, 'w') as f:
-        json.dump({
-            "timestamp": timestamp,
-            "routing_probabilities": routing,
-            "service_demands": demands,
-            "dependency_graph": dep_graph,
-        }, f, indent=2)
+    with open(raw_file, "w") as f:
+        json.dump(
+            {
+                "timestamp": timestamp,
+                "routing_probabilities": routing,
+                "service_demands": demands,
+                "dependency_graph": dep_graph,
+            },
+            f,
+            indent=2,
+        )
     print(f"  Raw trace data: {raw_file}")
 
 
@@ -265,12 +288,21 @@ def print_dependency_graph(routing: dict):
 
 def main():
     parser = argparse.ArgumentParser(description="Parse Jaeger traces")
-    parser.add_argument("--jaeger", type=str, default=JAEGER_URL,
-                        help="Jaeger Query URL (default: http://localhost:16686)")
-    parser.add_argument("--limit", type=int, default=500,
-                        help="Max traces per service (default: 500)")
-    parser.add_argument("--output", type=str, default="data/processed",
-                        help="Output directory")
+    parser.add_argument(
+        "--jaeger",
+        type=str,
+        default=JAEGER_URL,
+        help="Jaeger Query URL (default: http://localhost:16686)",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=500,
+        help="Max traces per service (default: 500)",
+    )
+    parser.add_argument(
+        "--output", type=str, default="data/processed", help="Output directory"
+    )
     args = parser.parse_args()
 
     print("=" * 60)
@@ -324,9 +356,11 @@ def main():
     print("Computing service demands...")
     demands = compute_service_demands(all_durations)
     for svc, stats in sorted(demands.items()):
-        print(f"  {svc:<25} mean={stats['mean_service_time']*1000:.2f}ms  "
-              f"p95={stats['p95_service_time']*1000:.2f}ms  "
-              f"n={stats['sample_count']}")
+        print(
+            f"  {svc:<25} mean={stats['mean_service_time']*1000:.2f}ms  "
+            f"p95={stats['p95_service_time']*1000:.2f}ms  "
+            f"n={stats['sample_count']}"
+        )
 
     # Save results
     print("\nSaving results...")

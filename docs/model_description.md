@@ -57,17 +57,19 @@ Each microservice is modelled as an independent M/M/1 queue:
 
 | Index | Service Centre          | Service Time S_i (ms) | Description                         |
 |-------|------------------------|-----------------------|-------------------------------------|
-| 0     | Frontend               | 116.0                 | HTTP server, fan-out to backends    |
+| 0     | Frontend               | 80.0                  | HTTP server, fan-out to backends    |
 | 1     | ProductCatalogService  | 5.0                   | Product data lookup                 |
 | 2     | CurrencyService        | 3.0                   | Currency conversion                 |
 | 3     | CartService            | 4.0                   | Shopping cart (Redis-backed)        |
-| 4     | RecommendationService  | 8.0                   | Product recommendations             |
-| 5     | AdService              | 6.0                   | Context-based advertisements        |
-| 6     | CheckoutService        | 15.0                  | Checkout orchestration              |
-| 7     | ShippingService        | 4.0                   | Shipping cost calculation           |
-| 8     | PaymentService         | 10.0                  | Credit card charge (mock)           |
-| 9     | EmailService           | 12.0                  | Confirmation email (mock)           |
+| 4     | RecommendationService  | 7.5                   | Product recommendations             |
+| 5     | AdService              | 5.8                   | Context-based advertisements        |
+| 6     | CheckoutService        | 14.5                  | Checkout orchestration              |
+| 7     | ShippingService        | 3.8                   | Shipping cost calculation           |
+| 8     | PaymentService         | 9.5                   | Credit card charge (mock)           |
+| 9     | EmailService           | 11.5                  | Confirmation email (mock)           |
 | 10    | Redis                  | 2.0                   | In-memory key-value store           |
+
+> **Note:** Service times are empirically measured via Jaeger distributed tracing (see `data/processed/service_times.json`). These are the mean intrinsic processing times — queueing delays are **not** included here; they are computed by the MVA solver.
 
 ### 3.3 Routing Matrix
 

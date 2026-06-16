@@ -1,12 +1,12 @@
 {
   "Frontend": {
-    "ProductCatalogService": 0.35,
-    "CurrencyService": 0.2,
-    "CartService": 0.15,
-    "RecommendationService": 0.1,
-    "AdService": 0.08,
-    "CheckoutService": 0.05,
-    "ShippingService": 0.05
+    "ProductCatalogService": 0.3,
+    "CurrencyService": 0.18,
+    "CartService": 0.13,
+    "RecommendationService": 0.08,
+    "AdService": 0.05,
+    "CheckoutService": 0.04,
+    "ShippingService": 0.04
   },
   "CartService": {
     "Redis": 0.95
@@ -15,11 +15,11 @@
     "ProductCatalogService": 0.8
   },
   "CheckoutService": {
-    "ProductCatalogService": 0.15,
-    "CurrencyService": 0.15,
-    "CartService": 0.15,
-    "ShippingService": 0.15,
-    "PaymentService": 0.2,
-    "EmailService": 0.15
+    "ProductCatalogService": 0.13,
+    "CurrencyService": 0.13,
+    "CartService": 0.13,
+    "ShippingService": 0.13,
+    "PaymentService": 0.18,
+    "EmailService": 0.13
   }
 }

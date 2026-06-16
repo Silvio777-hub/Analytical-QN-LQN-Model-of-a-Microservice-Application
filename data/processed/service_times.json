@@ -1,12 +1,13 @@
 {
-  "Frontend": 0.116,
+  "Frontend": 0.08000,
   "ProductCatalogService": 0.005,
   "CurrencyService": 0.003,
   "CartService": 0.004,
-  "RecommendationService": 0.008,
-  "AdService": 0.006,
-  "CheckoutService": 0.015,
-  "ShippingService": 0.004,
-  "PaymentService": 0.010,
-  "EmailService": 0.012
+  "RecommendationService": 0.0075,
+  "AdService": 0.0058,
+  "CheckoutService": 0.0145,
+  "ShippingService": 0.0038,
+  "PaymentService": 0.0095,
+  "EmailService": 0.0115,
+  "Redis": 0.002
 }
