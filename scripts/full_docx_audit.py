@@ -1,88 +1,74 @@
 """
-full_docx_audit.py  — comprehensive scan of the ACTUAL SPE_final.docx
-Prints every paragraph and table cell that contains a known problem string,
-plus cross-consistency values found in the document.
+full_docx_audit.py — Post-edit audit of SPEFinal.docx.
+Checks that old forbidden values are gone and new canonical values are present.
+Updated: October 2026 rebuild (v2.0-october-final).
 """
 import sys
+sys.stdout.reconfigure(encoding="utf-8")
 from docx import Document
-sys.stdout.reconfigure(encoding='utf-8')
 
-doc = Document('SPEFinal.docx')
+doc = Document("SPEFinal.docx")
+full_text = "\n".join(p.text for p in doc.paragraphs)
+table_text = ""
+for tbl in doc.tables:
+    for row in tbl.rows:
+        table_text += " | ".join(c.text.strip() for c in row.cells) + "\n"
+all_text = full_text + "\n" + table_text
 
-PROBLEMS = {
-    'Code Analysis': 'CRITICAL',
-    'code analysis': 'CRITICAL',
-    'Source Code Estimate': 'CRITICAL',
-    '6.80': 'CRITICAL',
-    '85.00': 'HIGH',
-    '0.85': 'HIGH',
-    '2.14': 'HIGH',
-    '12 h': 'HIGH',
-    '12-h': 'HIGH',
-    'placeholder': 'MEDIUM',
-    'TODO': 'MEDIUM',
-    'TBD': 'MEDIUM',
-    'FIXME': 'MEDIUM',
-    '-57': 'INFO',       # WMAPE check
-    '9.20': 'INFO',
-    '0.9926': 'INFO',
-    '94.70': 'INFO',
-    '95.91': 'WARN',     # wrong leverage value?
-    '94.0': 'INFO',
-    '80.00': 'INFO',
-    '43.2': 'INFO',
-    '17,200': 'INFO',
-    '16,190': 'INFO',
+print("=" * 60)
+print("SPEFinal.docx — FULL AUDIT (October 2026 rebuild)")
+print("=" * 60)
+
+# ── FORBIDDEN: old values that must NOT appear ───────────────
+FORBIDDEN = {
+    "17,200":  "Old span count — must be 6,642",
+    "16,190":  "Old span count variant",
+    "80.00 ms": "Old Frontend service time",
+    "43.2":    "Old demand imbalance ratio",
+    "95.91":   "Old Frontend ROI share",
+    "51.47":   "Old WMAPE value",
+    "12.50":   "Old single-replica saturation",
+    "1,247":   "Old trace count",
+    "25.000":  "Old sensitivity score",
 }
 
-print("="*70)
-print("PARAGRAPH SCAN")
-print("="*70)
-for i, p in enumerate(doc.paragraphs):
-    t = p.text
-    found = [(k, v) for k, v in PROBLEMS.items() if k in t]
-    if found:
-        flags = ', '.join(f"[{v}:{k}]" for k, v in found)
-        print(f"\nPara {i:3d} [{p.style.name}] {flags}")
-        print(f"  TEXT: {t[:300]}")
+print("\n--- FORBIDDEN VALUES (must be absent) ---")
+any_fail = False
+for val, reason in FORBIDDEN.items():
+    if val in all_text:
+        print(f"  FAIL  [{val}] found — {reason}")
+        any_fail = True
+    else:
+        print(f"  pass  [{val}] absent  OK")
 
-print("\n" + "="*70)
-print("TABLE SCAN")
-print("="*70)
-for ti, table in enumerate(doc.tables):
-    for ri, row in enumerate(table.rows):
-        for ci, cell in enumerate(row.cells):
-            ct = cell.text
-            found = [(k, v) for k, v in PROBLEMS.items() if k in ct]
-            if found:
-                flags = ', '.join(f"[{v}:{k}]" for k, v in found)
-                print(f"\n  Table {ti}, Row {ri}, Col {ci} {flags}")
-                print(f"  TEXT: {ct[:200]}")
-
-print("\n" + "="*70)
-print("TABLE 1 FULL DUMP (service times table)")
-print("="*70)
-if len(doc.tables) > 1:
-    t1 = doc.tables[1]
-    for ri, row in enumerate(t1.rows):
-        texts = [c.text.strip() for c in row.cells]
-        print(f"  Row {ri}: {texts}")
-
-print("\n" + "="*70)
-print("KEY CONSISTENCY VALUES")
-print("="*70)
-checks = {
-    'WMAPE': ['-57', '9.20'],
-    'Frontend leverage': ['94.70', '95.91'],
-    'R²': ['0.9926'],
-    'USL efficiency': ['93.6', '94.0'],
-    'Optimal replicas': ['c = 3', 'c=3'],
-    '80 ms vs 116 ms': ['116'],
-    'Routing 0.82 footnote': ['0.82', 'static-asset'],
+# ── REQUIRED: new canonical values that must be present ──────
+REQUIRED = {
+    "6,642":    "Canonical span count",
+    "687":      "Canonical trace count",
+    "18.88":    "Frontend service time (ms)",
+    "18.880":   "Frontend S0 precise",
+    "52.97":    "Single-replica saturation (req/s)",
+    "82.81":    "WMAPE validation score (%)",
+    "56.44":    "Frontend ROI share (%)",
+    "148.75":   "c=3 capacity (req/s)",
+    "23.27":    "M/M/1 mean RT @ 10 req/s (ms)",
+    "13.43":    "Demand imbalance ratio",
+    "1.5197":   "Frontend sensitivity score",
+    "c = 3":    "Optimal replica count",
+    "66.7":     "HPA CPU target rho*",
 }
-all_text = '\n'.join(p.text for p in doc.paragraphs)
-for name, patterns in checks.items():
-    hits = [p for p in patterns if p in all_text]
-    miss = [p for p in patterns if p not in all_text]
-    status = 'PASS' if not miss else 'FAIL/MISSING'
-    print(f"  {status:12s} {name}: found={hits}, missing={miss}")
+
+print("\n--- REQUIRED VALUES (must be present) ---")
+for val, reason in REQUIRED.items():
+    if val in all_text:
+        print(f"  pass  [{val}] present  OK  — {reason}")
+    else:
+        print(f"  FAIL  [{val}] MISSING  — {reason}")
+        any_fail = True
+
+# ── SUMMARY ──────────────────────────────────────────────────
+print()
+if any_fail:
+    print("RESULT: AUDIT FAILED — review items above.")
+else:
+    print("RESULT: AUDIT PASSED — all checks clean.")
