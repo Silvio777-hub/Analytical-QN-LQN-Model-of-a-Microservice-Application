@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Online Boutique — Interactive SPE Performance Visualizer</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #243248;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-green: #4ade80;
+      --accent-yellow: #facc15;
+      --accent-red: #f87171;
+      --accent-purple: #c084fc;
+      --border-color: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      background: #0369a1;
+      color: #e0f2fe;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-weight: 600;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 1024px) {
+      .grid-container { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Controls */
+    .control-group { margin-bottom: 18px; }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .control-group .val-display {
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: var(--border-color);
+      border-radius: 4px;
+      outline: none;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .kpi-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+    .kpi-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; margin-bottom: 4px; }
+    .kpi-value { font-size: 1.6rem; font-weight: 800; color: var(--text-primary); }
+    .kpi-sub { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; }
+
+    /* Replica Stepper Table */
+    .replica-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .replica-table th {
+      text-align: left;
+      padding: 6px 4px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .replica-table td {
+      padding: 6px 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .btn-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .btn-step:hover { background: var(--border-color); }
+    .rep-count { display: inline-block; width: 18px; text-align: center; font-weight: 700; color: var(--accent-blue); }
+
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 900px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+    .chart-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      height: 320px;
+      position: relative;
+    }
+
+    /* Util Bar */
+    .util-bar-bg {
+      background: #334155;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .util-bar-fill {
+      height: 100%;
+      transition: width 0.2s ease;
+    }
+
+    .btn-action {
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: background 0.15s;
+    }
+    .btn-action:hover { background: #0369a1; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1>⚡ Google Online Boutique <span class="badge">SPE Interactive Model</span></h1>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">
+        Universal M/M/1, M/G/1 (Pollaczek-Khinchine), & M/M/c Queueing Network Simulator
+      </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-action" onclick="resetDefaults()">Reset Baseline</button>
+      <button class="btn-action" style="background:#475569;" onclick="exportScenario()">Export JSON</button>
+    </div>
+  </div>
+
+  <div class="grid-container">
+    <!-- Left Sidebar: Controls -->
+    <div>
+      <div class="card">
+        <h2>🎛️ Workload & Model Selection</h2>
+        
+        <div class="control-group">
+          <label>
+            <span>Arrival Rate (λ)</span>
+            <span class="val-display" id="lambda-val">5.0 req/s</span>
+          </label>
+          <input type="range" id="lambda-slider" min="0.5" max="25.0" step="0.5" value="5.0" oninput="updateSimulation()">
+        </div>
+
+        <div class="control-group">
+          <label>Queueing Engine</label>
+          <select id="model-select" onchange="updateSimulation()">
+            <option value="mm1">M/M/1 Jackson Network (Exponential)</option>
+            <option value="mg1" selected>M/G/1 Pollaczek-Khinchine (Variance Adjusted)</option>
+            <option value="mmc">M/M/c Multi-Server Scaling (Erlang-C)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🧩 Per-Service Replica Configuration</h2>
+        <table class="replica-table">
+          <thead>
+            <tr>
+              <th>Microservice</th>
+              <th>S₀ (ms)</th>
+              <th>Replicas</th>
+              <th>Utilisation</th>
+            </tr>
+          </thead>
+          <tbody id="replica-tbody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right Main Area: KPIs & Interactive Charts -->
+    <div>
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">End-to-End Latency</div>
+          <div class="kpi-value" id="kpi-latency">139.6 ms</div>
+          <div class="kpi-sub" id="kpi-sla-status">🟢 Within 500ms SLA</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">System Bottleneck</div>
+          <div class="kpi-value" id="kpi-bottleneck" style="font-size: 1.25rem; color: var(--accent-yellow);">Frontend</div>
+          <div class="kpi-sub" id="kpi-sat-point">λ_sat = 12.5 req/s</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">p95 Tail Latency</div>
+          <div class="kpi-value" id="kpi-p95" style="color: var(--accent-purple);">3,225 ms</div>
+          <div class="kpi-sub">Kingman P-K Approximation</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">Est. Monthly Cost</div>
+          <div class="kpi-value" id="kpi-cost" style="color: var(--accent-green);">$93.45</div>
+          <div class="kpi-sub" id="kpi-pods-count">11 Active Pods</div>
+        </div>
+      </div>
+
+      <!-- Charts 2x2 -->
+      <div class="charts-grid">
+        <div class="chart-box">
+          <canvas id="rtChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <canvas id="utilChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <canvas id="tailChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <canvas id="costChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Canonical Architectural Parameters
+    const SERVICES = [
+      { name: "Frontend", s: 0.080, v: 1.000, cv: 4.48, reps: 1 },
+      { name: "ProductCatalogService", s: 0.005, v: 1.850, cv: 2.19, reps: 1 },
+      { name: "CurrencyService", s: 0.003, v: 0.920, cv: 3.72, reps: 1 },
+      { name: "CartService", s: 0.004, v: 0.750, cv: 4.74, reps: 1 },
+      { name: "RecommendationService", s: 0.0075, v: 0.400, cv: 7.13, reps: 1 },
+      { name: "AdService", s: 0.0058, v: 0.250, cv: 1.42, reps: 1 },
+      { name: "CheckoutService", s: 0.0145, v: 0.200, cv: 7.55, reps: 1 },
+      { name: "ShippingService", s: 0.0038, v: 0.240, cv: 2.59, reps: 1 },
+      { name: "PaymentService", s: 0.0095, v: 0.060, cv: 2.95, reps: 1 },
+      { name: "EmailService", s: 0.0115, v: 0.040, cv: 4.74, reps: 1 },
+      { name: "Redis", s: 0.002, v: 0.713, cv: 1.75, reps: 1 }
+    ];
+
+    let rtChartInstance = null;
+    let utilChartInstance = null;
+    let tailChartInstance = null;
+    let costChartInstance = null;
+
+    function initTable() {
+      const tbody = document.getElementById("replica-tbody");
+      tbody.innerHTML = "";
+      SERVICES.forEach((svc, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${svc.name.replace("Service", "")}</strong></td>
+          <td>${(svc.s * 1000).toFixed(1)}</td>
+          <td>
+            <button class="btn-step" onclick="changeReplicas(${idx}, -1)">-</button>
+            <span class="rep-count" id="rep-${idx}">${svc.reps}</span>
+            <button class="btn-step" onclick="changeReplicas(${idx}, 1)">+</button>
+          </td>
+          <td style="width: 70px;">
+            <div id="util-text-${idx}" style="font-size:0.75rem; font-weight:700;">0%</div>
+            <div class="util-bar-bg">
+              <div class="util-bar-fill" id="util-bar-${idx}" style="width: 0%; background: #4ade80;"></div>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function changeReplicas(idx, delta) {
+      SERVICES[idx].reps = Math.max(1, Math.min(8, SERVICES[idx].reps + delta));
+      document.getElementById(`rep-${idx}`).innerText = SERVICES[idx].reps;
+      updateSimulation();
+    }
+
+    function resetDefaults() {
+      SERVICES.forEach((s, idx) => {
+        s.reps = 1;
+        document.getElementById(`rep-${idx}`).innerText = 1;
+      });
+      document.getElementById("lambda-slider").value = 5.0;
+      document.getElementById("model-select").value = "mg1";
+      updateSimulation();
+    }
+
+    function solveMVA(lam, modelType) {
+      let totalRt = 0;
+      let maxRho = 0;
+      let bottleneck = "Frontend";
+      let nodeResults = [];
+
+      SERVICES.forEach((svc, i) => {
+        const lambda_i = lam * svc.v;
+        const c = svc.reps;
+        const rho = (lambda_i * svc.s) / c;
+
+        if (rho > maxRho) {
+          maxRho = rho;
+          bottleneck = svc.name;
+        }
+
+        let wq = 0;
+        const varFactor = (1 + svc.cv * svc.cv) / 2;
+
+        if (modelType === "mm1") {
+          wq = rho < 0.999 ? (rho * svc.s) / (1 - rho) : (0.999 * svc.s) / 0.001;
+        } else if (modelType === "mg1") {
+          const wq_mm1 = rho < 0.999 ? (rho * svc.s) / (1 - rho) : (0.999 * svc.s) / 0.001;
+          wq = wq_mm1 * varFactor;
+        } else if (modelType === "mmc") {
+          // Erlang-C approximation
+          const u = rho;
+          if (u < 0.999) {
+            wq = (u * svc.s) / (c * (1 - u));
+          } else {
+            wq = (0.999 * svc.s) / (c * 0.001);
+          }
+        }
+
+        const r_node = svc.s + wq;
+        totalRt += svc.v * r_node * 1000;
+
+        nodeResults.push({
+          name: svc.name,
+          rho: rho,
+          r_ms: r_node * 1000,
+          wq_ms: wq * 1000
+        });
+      });
+
+      return { totalRt, maxRho, bottleneck, nodeResults };
+    }
+
+    function updateSimulation() {
+      const lam = parseFloat(document.getElementById("lambda-slider").value);
+      const modelType = document.getElementById("model-select").value;
+      document.getElementById("lambda-val").innerText = `${lam.toFixed(1)} req/s`;
+
+      const sol = solveMVA(lam, modelType);
+
+      // Update KPIs
+      const latEl = document.getElementById("kpi-latency");
+      latEl.innerText = `${sol.totalRt.toFixed(1)} ms`;
+      latEl.style.color = sol.totalRt <= 250 ? "var(--accent-green)" : (sol.totalRt <= 500 ? "var(--accent-yellow)" : "var(--accent-red)");
+
+      const slaEl = document.getElementById("kpi-sla-status");
+      if (sol.totalRt <= 250) {
+        slaEl.innerText = "🟢 Optimal (< 250ms SLA Target)";
+        slaEl.style.color = "var(--accent-green)";
+      } else if (sol.totalRt <= 500) {
+        slaEl.innerText = "🟡 Warning (Approaching 500ms SLA)";
+        slaEl.style.color = "var(--accent-yellow)";
+      } else {
+        slaEl.innerText = "🔴 SLA BREACH (> 500ms)";
+        slaEl.style.color = "var(--accent-red)";
+      }
+
+      document.getElementById("kpi-bottleneck").innerText = sol.bottleneck.replace("Service", "");
+      
+      const fe = SERVICES[0];
+      const satRate = (fe.reps / fe.s).toFixed(1);
+      document.getElementById("kpi-sat-point").innerText = `λ_sat = ${satRate} req/s (${fe.reps} pods)`;
+
+      // Tail p95 estimate (Frontend Kingman P-K)
+      const feRho = (lam * fe.v * fe.s) / fe.reps;
+      const p95_est = feRho < 0.98 ? (fe.s * 1000 * 1.645 * fe.cv + (sol.nodeResults[0].wq_ms * 1.8)) : 9999;
+      document.getElementById("kpi-p95").innerText = `${Math.min(9999, p95_est).toFixed(0)} ms`;
+
+      // Cost calculation ($75 base + $18.45 per active pod)
+      const totalPods = SERVICES.reduce((acc, s) => acc + s.reps, 0);
+      const cost = 75.00 + (totalPods * 18.45);
+      document.getElementById("kpi-cost").innerText = `$${cost.toFixed(2)}`;
+      document.getElementById("kpi-pods-count").innerText = `${totalPods} Active Pods`;
+
+      // Update per-service utilization meters
+      sol.nodeResults.forEach((n, idx) => {
+        const pct = Math.min(100, Math.round(n.rho * 100));
+        const txt = document.getElementById(`util-text-${idx}`);
+        const bar = document.getElementById(`util-bar-${idx}`);
+        if (txt && bar) {
+          txt.innerText = `${pct}%`;
+          bar.style.width = `${pct}%`;
+          bar.style.background = pct < 65 ? "var(--accent-green)" : (pct < 85 ? "var(--accent-yellow)" : "var(--accent-red)");
+        }
+      });
+
+      renderCharts(lam, modelType);
+    }
+
+    function renderCharts(currentLam, modelType) {
+      // 1. Response Time vs Arrival Rate Curve
+      const lams = [];
+      const rts = [];
+      const maxL = Math.max(15, SERVICES[0].reps * 12.5);
+      for (let l = 0.5; l <= maxL; l += 0.5) {
+        lams.push(l.toFixed(1));
+        rts.push(Math.min(1200, solveMVA(l, modelType).totalRt));
+      }
+
+      if (rtChartInstance) rtChartInstance.destroy();
+      const ctx1 = document.getElementById("rtChart").getContext("2d");
+      rtChartInstance = new Chart(ctx1, {
+        type: "line",
+        data: {
+          labels: lams,
+          datasets: [
+            {
+              label: "System Response Time (ms)",
+              data: rts,
+              borderColor: "#38bdf8",
+              borderWidth: 2.5,
+              fill: false,
+              pointRadius: lams.map(l => Math.abs(parseFloat(l) - currentLam) < 0.3 ? 7 : 0),
+              pointBackgroundColor: "#f43f5e"
+            },
+            {
+              label: "500ms Hard SLA",
+              data: lams.map(() => 500),
+              borderColor: "#ef4444",
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: "Response Time vs. Arrival Rate (Hockey-Stick Curve)", color: "#f8fafc" },
+            legend: { labels: { color: "#94a3b8", font: { size: 10 } } }
+          },
+          scales: {
+            x: { title: { display: true, text: "Arrival Rate λ (req/s)", color: "#94a3b8" }, ticks: { color: "#94a3b8" } },
+            y: { title: { display: true, text: "Response Time (ms)", color: "#94a3b8" }, max: 1200, ticks: { color: "#94a3b8" } }
+          }
+        }
+      });
+
+      // 2. Microservice Utilization Spectrum
+      const sol = solveMVA(currentLam, modelType);
+      const svcNames = SERVICES.map(s => s.name.replace("Service", ""));
+      const utils = sol.nodeResults.map(n => Math.round(n.rho * 100));
+
+      if (utilChartInstance) utilChartInstance.destroy();
+      const ctx2 = document.getElementById("utilChart").getContext("2d");
+      utilChartInstance = new Chart(ctx2, {
+        type: "bar",
+        data: {
+          labels: svcNames,
+          datasets: [{
+            label: "Utilization (%)",
+            data: utils,
+            backgroundColor: utils.map(u => u < 65 ? "#4ade80" : (u < 85 ? "#facc15" : "#f87171"))
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: "Service Centre Utilisation Spectrum (%)", color: "#f8fafc" },
+            legend: { display: false }
+          },
+          scales: {
+            x: { ticks: { color: "#94a3b8", font: { size: 9 } } },
+            y: { max: 100, ticks: { color: "#94a3b8" } }
+          }
+        }
+      });
+
+      // 3. Tail Latency Breakdown
+      if (tailChartInstance) tailChartInstance.destroy();
+      const ctx3 = document.getElementById("tailChart").getContext("2d");
+      const mean_val = sol.totalRt;
+      tailChartInstance = new Chart(ctx3, {
+        type: "bar",
+        data: {
+          labels: ["p50 (Median)", "Mean (M/G/1)", "p90 Tail", "p95 Tail (SLA)", "p99 Tail"],
+          datasets: [{
+            label: "Latency (ms)",
+            data: [
+              Math.round(mean_val * 0.45),
+              Math.round(mean_val),
+              Math.round(mean_val * 1.8),
+              Math.round(mean_val * 2.6),
+              Math.round(mean_val * 4.5)
+            ],
+            backgroundColor: ["#38bdf8", "#818cf8", "#fbbf24", "#f87171", "#c084fc"]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: "Tail Latency Percentile Spectrum", color: "#f8fafc" },
+            legend: { display: false }
+          },
+          scales: {
+            x: { ticks: { color: "#94a3b8" } },
+            y: { ticks: { color: "#94a3b8" } }
+          }
+        }
+      });
+
+      // 4. Multi-Replica Scaling & Cost Frontier
+      const repOptions = [1, 2, 3, 4, 5];
+      const caps = repOptions.map(c => (c * 10.5).toFixed(1));
+      const costs = repOptions.map(c => (75 + (10 + c) * 18.45).toFixed(0));
+
+      if (costChartInstance) costChartInstance.destroy();
+      const ctx4 = document.getElementById("costChart").getContext("2d");
+      costChartInstance = new Chart(ctx4, {
+        type: "line",
+        data: {
+          labels: repOptions.map(c => `c=${c} Pods`),
+          datasets: [
+            {
+              label: "SLA Capacity (req/s)",
+              data: caps,
+              borderColor: "#38bdf8",
+              backgroundColor: "#38bdf8",
+              yAxisID: "y"
+            },
+            {
+              label: "Monthly Cost ($USD)",
+              data: costs,
+              borderColor: "#f43f5e",
+              backgroundColor: "#f43f5e",
+              yAxisID: "y1"
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: "Frontend Horizontal Scaling vs. Infrastructure Cost", color: "#f8fafc" },
+            legend: { labels: { color: "#94a3b8", font: { size: 10 } } }
+          },
+          scales: {
+            x: { ticks: { color: "#94a3b8" } },
+            y: { type: "linear", position: "left", title: { display: true, text: "Capacity (req/s)", color: "#38bdf8" }, ticks: { color: "#38bdf8" } },
+            y1: { type: "linear", position: "right", title: { display: true, text: "Cost ($/mo)", color: "#f43f5e" }, ticks: { color: "#f43f5e" }, grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+    }
+
+    function exportScenario() {
+      const lam = parseFloat(document.getElementById("lambda-slider").value);
+      const modelType = document.getElementById("model-select").value;
+      const sol = solveMVA(lam, modelType);
+      const payload = {
+        timestamp: new Date().toISOString(),
+        arrival_rate_rps: lam,
+        queueing_model: modelType,
+        total_system_response_time_ms: sol.totalRt,
+        bottleneck: sol.bottleneck,
+        replicas: SERVICES.map(s => ({ service: s.name, replicas: s.reps })),
+        node_results: sol.nodeResults
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `spe_scenario_lambda_${lam}rps.json`;
+      a.click();
+    }
+
+    window.onload = () => {
+      initTable();
+      updateSimulation();
+    };
+  </script>
+</body>
+</html>

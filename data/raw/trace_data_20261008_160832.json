@@ -1,0 +1,95 @@
+{
+  "timestamp": "20261008_160832",
+  "routing_probabilities": {
+    "Frontend": {
+      "CurrencyService": 0.266,
+      "RecommendationService": 0.1006,
+      "ProductCatalogService": 0.5914,
+      "CheckoutService": 0.042
+    },
+    "RecommendationService": {
+      "ProductCatalogService": 1.0
+    },
+    "CheckoutService": {
+      "PaymentService": 0.1819,
+      "ProductCatalogService": 0.4335,
+      "EmailService": 0.1819,
+      "CurrencyService": 0.2026
+    }
+  },
+  "service_demands": {
+    "CurrencyService": {
+      "mean_service_time": 0.002261299808429119,
+      "median_service_time": 0.000276,
+      "p95_service_time": 0.0014717999999999975,
+      "p99_service_time": 0.011131539999999999,
+      "std_service_time": 0.04060791896742673,
+      "sample_count": 1044
+    },
+    "RecommendationService": {
+      "mean_service_time": 0.01091143005952381,
+      "median_service_time": 0.001178,
+      "p95_service_time": 0.013790199999999987,
+      "p99_service_time": 0.10826910999999947,
+      "std_service_time": 0.10951696761702201,
+      "sample_count": 672
+    },
+    "ProductCatalogService": {
+      "mean_service_time": 0.0006813232514177694,
+      "median_service_time": 1.3e-05,
+      "p95_service_time": 3.6e-05,
+      "p99_service_time": 0.00012379999999999973,
+      "std_service_time": 0.030441898372207774,
+      "sample_count": 2645
+    },
+    "Frontend": {
+      "mean_service_time": 0.019718782444549315,
+      "median_service_time": 0.001726,
+      "p95_service_time": 0.06973579999999986,
+      "p99_service_time": 0.3441123600000009,
+      "std_service_time": 0.13450894085677315,
+      "sample_count": 4238
+    },
+    "PaymentService": {
+      "mean_service_time": 0.020402872340425534,
+      "median_service_time": 0.001156,
+      "p95_service_time": 0.038272,
+      "p99_service_time": 0.21237679999999937,
+      "std_service_time": 0.13822987711583512,
+      "sample_count": 141
+    },
+    "CheckoutService": {
+      "mean_service_time": 0.04583124111675127,
+      "median_service_time": 0.006125,
+      "p95_service_time": 0.155032,
+      "p99_service_time": 0.668857,
+      "std_service_time": 0.21298596695595387,
+      "sample_count": 1576
+    },
+    "EmailService": {
+      "mean_service_time": 0.009975560283687944,
+      "median_service_time": 0.000363,
+      "p95_service_time": 0.008062,
+      "p99_service_time": 0.04971319999999996,
+      "std_service_time": 0.09594566571189575,
+      "sample_count": 141
+    }
+  },
+  "dependency_graph": {
+    "frontend": [
+      "checkoutservice",
+      "currencyservice",
+      "productcatalogservice",
+      "recommendationservice"
+    ],
+    "recommendationservice": [
+      "productcatalogservice"
+    ],
+    "checkoutservice": [
+      "currencyservice",
+      "emailservice",
+      "paymentservice",
+      "productcatalogservice"
+    ]
+  }
+}

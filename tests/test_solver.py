@@ -99,3 +99,21 @@ def test_textbook_example_visit_ratios():
     assert np.isclose(results.arrival_rates[0], expected_lambda0)
     assert np.isclose(results.arrival_rates[1], expected_lambda1)
     assert np.isclose(results.arrival_rates[2], expected_lambda2)
+
+
+def test_mg1_pollaczek_khinchine_formula():
+    """Test Pollaczek-Khinchine M/G/1 variance and tail latency formulations."""
+    from mg1_variance_analyzer import load_empirical_variances, solve_mg1_network
+
+    variances = load_empirical_variances()
+    sol = solve_mg1_network(5.0, variances)
+
+    # 1. Variance penalty must inflate M/G/1 response time over M/M/1
+    assert sol["system_rt_mg1_ms"] > sol["system_rt_mm1_ms"], "M/G/1 RT must exceed M/M/1 when C_v > 1"
+    assert sol["mg1_vs_mm1_gap_ms"] > 0, "Variance gap must be positive"
+
+    # 2. Frontend tail latency ordering: p50 < p90 < p95 < p99
+    fe = sol["nodes"][0]
+    assert fe["service"] == "Frontend"
+    assert fe["p50_ms"] < fe["p90_ms"] < fe["p95_ms"] < fe["p99_ms"], "Tail latencies must be strictly monotonically increasing"
+    assert fe["pk_variance_penalty"] > 1.0, "Frontend P-K variance penalty must exceed 1.0"

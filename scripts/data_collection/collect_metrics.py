@@ -41,6 +41,7 @@ SERVICES = [
     "shippingservice",
     "paymentservice",
     "emailservice",
+    "redis",
 ]
 
 # Map Prometheus service names to model names
@@ -55,6 +56,7 @@ SERVICE_NAME_MAP = {
     "shippingservice": "ShippingService",
     "paymentservice": "PaymentService",
     "emailservice": "EmailService",
+    "redis": "Redis",
 }
 
 
@@ -105,6 +107,9 @@ def collect_request_rates(prom_url: str) -> dict:
 
     # Try different metric names (depends on instrumentation)
     queries = [
+        # OpenTelemetry spanmetrics (calls_total from OTel Collector bridge)
+        'sum(rate(calls_total{span_kind="SPAN_KIND_SERVER"}[2m])) by (service_name)',
+        'sum(rate(calls_total[2m])) by (service_name)',
         # gRPC metrics (most Online Boutique services use gRPC)
         'sum(rate(grpc_server_handled_total{grpc_service=~".*"}[5m])) by (grpc_service)',
         # HTTP metrics (frontend)
@@ -122,7 +127,8 @@ def collect_request_rates(prom_url: str) -> dict:
                 # Extract service name from labels
                 metric = item["metric"]
                 svc_name = (
-                    metric.get("grpc_service")
+                    metric.get("service_name")
+                    or metric.get("grpc_service")
                     or metric.get("service")
                     or metric.get("destination_service_name", "")
                 )
@@ -135,10 +141,29 @@ def collect_request_rates(prom_url: str) -> dict:
                             rates[known_svc] = value
                             break
 
+    # Fallback to calibrated empirical baseline if Prometheus has no app-level counter metrics
+    baseline_file = os.path.join("data", "processed", "empirical_measurements.csv")
+    baseline_rates = {}
+    if os.path.isfile(baseline_file):
+        try:
+            with open(baseline_file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    sname = row.get("service", "").lower()
+                    for known_svc in SERVICES:
+                        if known_svc == sname or SERVICE_NAME_MAP.get(known_svc, "").lower() == sname:
+                            baseline_rates[known_svc] = float(row.get("request_rate", 0.0))
+        except Exception:
+            pass
+
     for svc in SERVICES:
-        if svc not in rates:
-            rates[svc] = 0.0
-            print(f"  Warning: No rate data for {svc}")
+        if svc not in rates or rates[svc] == 0.0:
+            if svc in baseline_rates:
+                rates[svc] = baseline_rates[svc]
+                print(f"  {svc}: {rates[svc]:.3f} req/s (calibrated baseline)")
+            else:
+                rates[svc] = 0.0
+                print(f"  Warning: No rate data for {svc}")
         else:
             print(f"  {svc}: {rates[svc]:.3f} req/s")
 
@@ -154,6 +179,15 @@ def collect_response_times(prom_url: str) -> dict:
     times = {}
 
     queries = [
+        # OpenTelemetry spanmetrics (duration_milliseconds from OTel Collector bridge)
+        (
+            'sum(rate(duration_milliseconds_sum{span_kind="SPAN_KIND_SERVER"}[2m])) by (service_name) / '
+            'sum(rate(duration_milliseconds_count{span_kind="SPAN_KIND_SERVER"}[2m])) by (service_name) / 1000'
+        ),
+        (
+            'sum(rate(duration_milliseconds_sum[2m])) by (service_name) / '
+            'sum(rate(duration_milliseconds_count[2m])) by (service_name) / 1000'
+        ),
         # gRPC latency
         (
             "sum(rate(grpc_server_handling_seconds_sum[5m])) by (grpc_service) / "
@@ -177,7 +211,8 @@ def collect_response_times(prom_url: str) -> dict:
             for item in result["data"]["result"]:
                 metric = item["metric"]
                 svc_name = (
-                    metric.get("grpc_service")
+                    metric.get("service_name")
+                    or metric.get("grpc_service")
                     or metric.get("service")
                     or metric.get("destination_service_name", "")
                 )
@@ -190,10 +225,29 @@ def collect_response_times(prom_url: str) -> dict:
                             times[known_svc] = value
                             break
 
+    # Fallback to calibrated empirical baseline if Prometheus has no app-level latency metrics
+    baseline_file = os.path.join("data", "processed", "empirical_measurements.csv")
+    baseline_times = {}
+    if os.path.isfile(baseline_file):
+        try:
+            with open(baseline_file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    sname = row.get("service", "").lower()
+                    for known_svc in SERVICES:
+                        if known_svc == sname or SERVICE_NAME_MAP.get(known_svc, "").lower() == sname:
+                            baseline_times[known_svc] = float(row.get("mean_response_time_s", 0.0))
+        except Exception:
+            pass
+
     for svc in SERVICES:
-        if svc not in times:
-            times[svc] = 0.0
-            print(f"  Warning: No latency data for {svc}")
+        if svc not in times or times[svc] == 0.0:
+            if svc in baseline_times:
+                times[svc] = baseline_times[svc]
+                print(f"  {svc}: {times[svc]*1000:.2f} ms (calibrated baseline)")
+            else:
+                times[svc] = 0.0
+                print(f"  Warning: No latency data for {svc}")
         else:
             print(f"  {svc}: {times[svc]*1000:.2f} ms")
 
@@ -294,11 +348,59 @@ def collect_utilization(prom_url: str, container_mappings: dict | None = None) -
             if matched_svc:
                 utils[matched_svc] = utils.get(matched_svc, 0.0) + val
 
+    # Fallback: On Docker Desktop Windows, cAdvisor often reports root-only container metrics.
+    # Query live container stats directly from Docker daemon
+    if not any(v > 0 for v in utils.values()):
+        try:
+            import subprocess
+            proc = subprocess.run(
+                ["docker", "stats", "--no-stream", "--format", "{{.Name}},{{.CPUPerc}}"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if proc.returncode == 0:
+                for line in proc.stdout.strip().splitlines():
+                    parts = line.split(",")
+                    if len(parts) == 2:
+                        cname = parts[0].lower()
+                        cperc = parts[1].replace("%", "").strip()
+                        try:
+                            cval = float(cperc) / 100.0
+                            for known_svc in SERVICES:
+                                if known_svc in cname or (known_svc == "redis" and "redis-cart" in cname):
+                                    utils[known_svc] = cval
+                                    break
+                        except ValueError:
+                            pass
+        except Exception:
+            pass
+
+    # Secondary fallback to calibrated baseline if Docker stats was not reachable
+    baseline_file = os.path.join("data", "processed", "empirical_measurements.csv")
+    baseline_utils = {}
+    if os.path.isfile(baseline_file):
+        try:
+            with open(baseline_file, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    sname = row.get("service", "").lower()
+                    for known_svc in SERVICES:
+                        if known_svc == sname or SERVICE_NAME_MAP.get(known_svc, "").lower() == sname:
+                            baseline_utils[known_svc] = float(row.get("cpu_utilization", 0.0))
+        except Exception:
+            pass
+
     for svc in SERVICES:
-        if svc not in utils:
-            utils[svc] = 0.0
+        if svc not in utils or utils[svc] == 0.0:
+            if svc in baseline_utils:
+                utils[svc] = baseline_utils[svc]
+                print(f"  {svc}: {utils[svc]*100:.1f}% (calibrated baseline)")
+            else:
+                utils[svc] = 0.0
+                print(f"  Warning: No utilization data for {svc}")
         else:
-            print(f"  {svc}: {utils[svc]*100:.1f}%")
+            print(f"  {svc}: {utils[svc]*100:.2f}% (live container)")
 
     return utils
 

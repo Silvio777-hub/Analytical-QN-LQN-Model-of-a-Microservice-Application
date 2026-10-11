@@ -1,0 +1,42 @@
+{
+  "timestamp": "20261008_164134",
+  "request_rates": {
+    "Frontend": 5.0,
+    "ProductCatalogService": 2.188,
+    "CurrencyService": 1.038,
+    "CartService": 0.787,
+    "RecommendationService": 0.5,
+    "AdService": 0.4,
+    "CheckoutService": 0.25,
+    "ShippingService": 0.287,
+    "PaymentService": 0.05,
+    "EmailService": 0.037,
+    "Redis": 0.642
+  },
+  "response_times": {
+    "Frontend": 0.285,
+    "ProductCatalogService": 0.0082,
+    "CurrencyService": 0.0051,
+    "CartService": 0.0068,
+    "RecommendationService": 0.0124,
+    "AdService": 0.0091,
+    "CheckoutService": 0.0225,
+    "ShippingService": 0.0072,
+    "PaymentService": 0.0143,
+    "EmailService": 0.018,
+    "Redis": 0.002
+  },
+  "cpu_utilization": {
+    "CartService": 0.0058,
+    "AdService": 0.0016,
+    "ShippingService": 0.0011,
+    "PaymentService": 0.0005,
+    "EmailService": 0.0015,
+    "Redis": 0.0226,
+    "ProductCatalogService": 0.0109,
+    "RecommendationService": 0.0045000000000000005,
+    "CurrencyService": 3.9613,
+    "CheckoutService": 0.0037,
+    "Frontend": 0.0048
+  }
+}

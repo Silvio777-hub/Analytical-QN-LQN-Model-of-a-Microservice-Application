@@ -1,0 +1,68 @@
+{
+  "collection_metadata": {
+    "start_time": "2026-10-08T17:58:26Z",
+    "duration_minutes": 45,
+    "load_tool": "Locust",
+    "target_rps": 5.0,
+    "total_traces": 687,
+    "total_spans": 6642,
+    "note": "Fresh live telemetry run from Docker. All 10 microservices measured empirically from Jaeger server-side traces and frontend/checkout client spans. Redis state store evaluated with default 2.0ms service time."
+  },
+  "services_with_empirical_trace_data": [
+    "Frontend",
+    "ProductCatalogService",
+    "CurrencyService",
+    "CartService",
+    "RecommendationService",
+    "AdService",
+    "CheckoutService",
+    "ShippingService",
+    "PaymentService",
+    "EmailService"
+  ],
+  "services_with_estimated_data": [
+    "Redis"
+  ],
+  "services_missing": [],
+  "all_services_covered": true,
+  "call_graph": {
+    "Frontend": {
+      "ProductCatalogService": 0.5583,
+      "CurrencyService": 0.2383,
+      "RecommendationService": 0.0978,
+      "CheckoutService": 0.0462,
+      "CartService": 0.0311,
+      "AdService": 0.0195,
+      "ShippingService": 0.0089
+    },
+    "CheckoutService": {
+      "ProductCatalogService": 0.3662,
+      "ShippingService": 0.1413,
+      "CartService": 0.1398,
+      "PaymentService": 0.1390,
+      "EmailService": 0.1390,
+      "CurrencyService": 0.0747
+    },
+    "RecommendationService": {
+      "ProductCatalogService": 1.0
+    },
+    "CartService": {
+      "Redis": 0.95
+    }
+  },
+  "service_sample_counts": {
+    "Frontend": 2386,
+    "ProductCatalogService": 1574,
+    "CheckoutService": 992,
+    "CurrencyService": 564,
+    "RecommendationService": 404,
+    "CartService": 221,
+    "ShippingService": 131,
+    "PaymentService": 96,
+    "EmailService": 95,
+    "AdService": 79,
+    "Redis": 500
+  },
+  "total_trace_count": 687,
+  "total_span_count": 6642
+}

@@ -1,0 +1,5 @@
+target_rps,empirical_throughput,empirical_mean_rt_ms,empirical_p95_rt_ms,model_predicted_rt_ms,sample_count,success_rate
+2.0,1.636,354.16,1365.18,101.5,60,0.817
+5.0,4.214,996.78,5979.26,139.62,150,0.84
+8.0,4.597,856.99,8012.71,228.54,240,0.742
+10.0,4.823,2887.9,8016.38,406.33,300,0.723

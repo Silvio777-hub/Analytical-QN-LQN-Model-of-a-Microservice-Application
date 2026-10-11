@@ -56,8 +56,12 @@ services:
     image: gcr.io/google-samples/microservices-demo/cartservice:v0.10.1
     environment:
       REDIS_ADDR: "redis-cart:6379"
+      ENABLE_TRACING: "1"
       COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-collector:4317"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: "grpc"
       OTEL_SERVICE_NAME: "cartservice"
     depends_on:
       - redis-cart
@@ -66,28 +70,28 @@ services:
     image: gcr.io/google-samples/microservices-demo/productcatalogservice:v0.10.1
     environment:
       PORT: "3550"
+      ENABLE_TRACING: "1"
       COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       OTEL_SERVICE_NAME: "productcatalogservice"
-      DISABLE_TRACING: "0"
       DISABLE_PROFILER: "1"
 
   currencyservice:
     image: gcr.io/google-samples/microservices-demo/currencyservice:v0.10.1
     environment:
       PORT: "7000"
+      ENABLE_TRACING: "1"
       COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       OTEL_SERVICE_NAME: "currencyservice"
-      DISABLE_TRACING: "0"
       DISABLE_PROFILER: "1"
 
   paymentservice:
     image: gcr.io/google-samples/microservices-demo/paymentservice:v0.10.1
     environment:
       PORT: "50051"
+      ENABLE_TRACING: "1"
       DISABLE_PROFILER: "1"
-      DISABLE_TRACING: "0"
       COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       OTEL_SERVICE_NAME: "paymentservice"
@@ -96,18 +100,21 @@ services:
     image: gcr.io/google-samples/microservices-demo/shippingservice:v0.10.1
     environment:
       PORT: "50051"
+      ENABLE_TRACING: "1"
       DISABLE_PROFILER: "1"
-      DISABLE_TRACING: "0"
       COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-collector:4317"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: "grpc"
       OTEL_SERVICE_NAME: "shippingservice"
 
   emailservice:
     image: gcr.io/google-samples/microservices-demo/emailservice:v0.10.1
     environment:
       PORT: "8080"
+      ENABLE_TRACING: "1"
       DISABLE_PROFILER: "1"
-      DISABLE_TRACING: "0"
       COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       OTEL_SERVICE_NAME: "emailservice"
@@ -122,10 +129,10 @@ services:
       EMAIL_SERVICE_ADDR: "emailservice:8080"
       CURRENCY_SERVICE_ADDR: "currencyservice:7000"
       CART_SERVICE_ADDR: "cartservice:7070"
+      ENABLE_TRACING: "1"
       COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       OTEL_SERVICE_NAME: "checkoutservice"
-      DISABLE_TRACING: "0"
       DISABLE_PROFILER: "1"
 
   recommendationservice:
@@ -133,8 +140,8 @@ services:
     environment:
       PORT: "8080"
       PRODUCT_CATALOG_SERVICE_ADDR: "productcatalogservice:3550"
+      ENABLE_TRACING: "1"
       DISABLE_PROFILER: "1"
-      DISABLE_TRACING: "0"
       COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       OTEL_SERVICE_NAME: "recommendationservice"
@@ -143,11 +150,15 @@ services:
     image: gcr.io/google-samples/microservices-demo/adservice:v0.10.1
     environment:
       PORT: "9555"
+      ENABLE_TRACING: "1"
       COLLECTOR_SERVICE_ADDR: "otel-collector:4317"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-collector:4317"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: "grpc"
+      OTEL_TRACES_EXPORTER: "otlp"
       OTEL_SERVICE_NAME: "adservice"
       DISABLE_STATS: "1"
-      DISABLE_TRACING: "0"
 
   redis-cart:
     image: redis:7-alpine
@@ -168,12 +179,14 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:1.53
+    init: true
     ports:
       - "16686:16686" # Jaeger UI
       - "14268:14268" # Jaeger collector HTTP
       - "14250:14250" # Jaeger collector gRPC
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
+      MEMORY_MAX_TRACES: "5000"
 
   prometheus:
     image: prom/prometheus:v2.48.0

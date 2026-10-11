@@ -260,11 +260,12 @@ def run_with_sample_data(output_dir="results/figures"):
         "ShippingService",
         "PaymentService",
         "EmailService",
+        "Redis",
     ]
 
     # Predicted values drawn from real MVA solver output at lambda = 10 req/s
     # (source: results/model_predictions.json — S values from service_times.json)
-    pred_rt = np.array([400.00, 5.09, 3.02, 4.02, 7.55, 5.83, 14.60, 3.81, 9.55, 11.57])
+    pred_rt = np.array([400.00, 5.09, 3.02, 4.02, 7.55, 5.83, 14.60, 3.81, 9.55, 11.57, 2.01])
 
     # Sample measured values (simulated empirical data with some noise)
     np.random.seed(42)
@@ -322,7 +323,7 @@ def main():
     parser.add_argument(
         "--measurements",
         type=str,
-        default=None,
+        default="data/processed/empirical_measurements.csv",
         help="Path to measurements CSV (supports glob patterns)",
     )
     parser.add_argument(

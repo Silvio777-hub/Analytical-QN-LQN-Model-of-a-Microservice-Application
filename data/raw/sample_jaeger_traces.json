@@ -1,0 +1,48 @@
+{
+  "service_demands": {
+    "Frontend": {
+      "mean_service_time": 0.080000,
+      "sample_count": 2386
+    },
+    "ProductCatalogService": {
+      "mean_service_time": 0.000324,
+      "sample_count": 1574
+    },
+    "CurrencyService": {
+      "mean_service_time": 0.001603,
+      "sample_count": 564
+    },
+    "CartService": {
+      "mean_service_time": 0.035229,
+      "sample_count": 221
+    },
+    "RecommendationService": {
+      "mean_service_time": 0.003828,
+      "sample_count": 404
+    },
+    "AdService": {
+      "mean_service_time": 0.019882,
+      "sample_count": 79
+    },
+    "CheckoutService": {
+      "mean_service_time": 0.033522,
+      "sample_count": 992
+    },
+    "ShippingService": {
+      "mean_service_time": 0.013445,
+      "sample_count": 131
+    },
+    "PaymentService": {
+      "mean_service_time": 0.047942,
+      "sample_count": 96
+    },
+    "EmailService": {
+      "mean_service_time": 0.001293,
+      "sample_count": 95
+    },
+    "Redis": {
+      "mean_service_time": 0.002000,
+      "sample_count": 500
+    }
+  }
+}

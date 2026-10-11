@@ -1,0 +1,42 @@
+name: SPE Analytical Model CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  audit-and-test:
+    name: Model Audit, Solver & Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest Test Suite
+        run: |
+          pytest -v
+
+      - name: Execute Analytical Queueing Network Solver
+        run: |
+          python scripts/model/queueing_network.py --arrival-rate 10.0
+
+      - name: Run Master Cross-Consistency Audit
+        run: |
+          python scripts/audit_report.py

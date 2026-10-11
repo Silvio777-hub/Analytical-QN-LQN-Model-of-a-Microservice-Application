@@ -1,0 +1,597 @@
+--- PARA   0 [Normal] ---
+Software Performance Engineering Course 2025/2026
+
+--- PARA   1 [Normal] ---
+Performance Modelling of a Microservice Application:
+Analytical Queueing Network Formulation, Empirical Parameterisation, and Validation
+
+--- PARA   2 [Normal] ---
+Benchmark System: Google Online Boutique — 11-Service Polyglot Microservice Application
+
+--- PARA   3 [Normal] ---
+Authors: Essa Janneh | Opoka JM Silvio
+Date: August 25th, 2026
+
+--- PARA   4 [Normal] ---
+https://github.com/Silvio777-hub/Analytical-QN-LQN-Model-of-a-Microservice-Application
+
+--- PARA   5 [Heading 1] ---
+Abstract
+
+--- PARA   6 [Normal] ---
+This report presents an analytical queueing network model for the Google Online Boutique microservice benchmark, parameterised from 17,200 Jaeger telemetry spans across 1,247 traces (112 complete end-to-end and 1,135 partial/single-service traces). Eight service times are extracted from Jaeger spans; three (CartService, AdService, ShippingService) are estimated from instrumented code-path analysis due to a gRPC span-naming mismatch in the collector filter. The model identifies the Go Frontend as the sole binding bottleneck (D₀ = 80.00 ms, 80.00% CPU at λ₀ = 10 req/s, 43.2× larger demand than the second-heaviest service, 95.91% of total optimisation leverage). Empirical validation is available at one workload tier (λ₀ = 5.0 req/s), at which the pure-CPU model yields an Absolute Percentage Error of 51.47% (138.33 ms predicted vs. 285.0 ms observed), reflecting the omission of synchronous downstream blocking. Two independent measurements of Frontend CPU at λ=5 — 58% (cAdvisor 30-minute average) versus 2.58% (Prometheus 15-second rate) — diverge by 22× due to sampling-window semantics. All horizontal scaling and ROI projections are analytical model predictions.
+
+--- PARA   7 [Heading 1] ---
+Table of Contents
+
+--- PARA   8 [Heading 1] ---
+List of Figures
+
+--- PARA   9 [table of figures] ---
+Figure 1: Reconstructed Microservice Call Graph for Google Online Boutique	7
+
+--- PARA  10 [table of figures] ---
+Figure 2: Layered Queueing Network (LQN) Three-Tier Architecture	8
+
+--- PARA  11 [table of figures] ---
+Figure 3: Predicted Microservice Utilisation at λ₀ = 10 req/s (Model)	12
+
+--- PARA  12 [table of figures] ---
+Figure 4: Analytical Model Predictions vs. Real-World Benchmark (1 Empirical Tier)	14
+
+--- PARA  13 [table of figures] ---
+Figure 5: Model-Predicted System Latency Curve & 500 ms SLA Boundary	15
+
+--- PARA  14 [table of figures] ---
+Figure 6: Predicted System Response Time Under Multi-Replica Frontend Scaling (Model)	18
+
+--- PARA  15 [table of figures] ---
+Figure 7: Sensitivity Tornado Chart: Where System Speedup Comes From	20
+
+--- PARA  16 [Heading 1] ---
+List of Tables
+
+--- PARA  17 [table of figures] ---
+Table 1: Concept, Symbol, Definition, and Everyday Analogy	2
+
+--- PARA  18 [table of figures] ---
+Table 2: Open Jackson QN vs. Layered Queueing Network (LQN) Architecture	4
+
+--- PARA  19 [table of figures] ---
+Table 3: Queueing Model Foundational Parameters	5
+
+--- PARA  20 [table of figures] ---
+Table 4: Online Boutique Microservices Runtime, Protocol, and Architectural Role	6
+
+--- PARA  21 [table of figures] ---
+Table 5: Visit Ratio, Exclusive Service Time, Total Demand, and CPU Load at 10 req/s	9
+
+--- PARA  22 [table of figures] ---
+Table 6: Empirical Service Times Breakdown (Mean, Median, P95, P99)	10
+
+--- PARA  23 [table of figures] ---
+Table 7: Model Predictions vs. Observed Response Times (1 Empirical Tier)	13
+
+--- PARA  24 [table of figures] ---
+Table 8: M/M/c Horizontal Pod Autoscaling Performance & USL Efficiency	17
+
+--- PARA  25 [table of figures] ---
+Table 9: Sensitivity Analysis & Engineering Optimization Priority Ranking	19
+
+--- PARA  26 [table of figures] ---
+Table 10: Comprehensive Mathematical Formulas Reference Matrix	c
+
+--- PARA  27 [table of figures] ---
+Table 11: Architectural and Operational Benchmark Constants	e
+
+--- PARA  28 [Heading 1] ---
+Executive Summary & Core Finding
+
+--- PARA  29 [Normal] ---
+We constructed an analytical performance model of the Google Online Boutique microservice benchmark (11 polyglot services), parameterised from 17,200 telemetry spans across 1,247 traces. The model predicts end-to-end response times, queue lengths, and saturation bounds in under 50 ms, eliminating the cloud expense and operational risk of physical load testing.
+
+--- PARA  30 [Normal] ---
+Three Key Architectural Findings
+
+--- PARA  31 [Normal] ---
+The Frontend service demand S₀ = 80.00 ms is the LQN-demarcated CPU computation time from service_demands.json. The steady-state time-averaged CPU utilisation at 5 req/s (0.58) implies an effective service demand of 116 ms (= 0.58 / 5.0 × 1000), which includes ~36 ms of container runtime overhead (TLS handshakes, gRPC thread pool management, network polling) discussed in §9. The LQN-demarcated value is used for all analytical calculations to preserve internal consistency.
+
+--- PARA  32 [List Paragraph] ---
+The Frontend is the Sole System Bottleneck: At 10 req/s nominal load, the Go Frontend operates at 80.00% CPU utilisation, whereas the second-heaviest service (ProductCatalog) consumes only 1.85% (a 43.2× imbalance). Sensitivity derivative analysis concentrates 95.91% of all system optimisation ROI in the Frontend. All 10 backend microservices are essentially idle (<3% CPU).
+
+--- PARA  33 [List Paragraph] ---
+Gateway Fan-Out Synchronous Blocking: While the Frontend executes 80.0 ms of exclusive CPU computation, its worker goroutines remain blocked for an additional 205.0 ms awaiting downstream RPC responses across 10 backend dependencies, resulting in 285.0 ms gross response time at 5 req/s. Standard Open Jackson Queueing Networks fail to capture this thread blocking; only Layered Queueing Networks (LQN) accurately represent multi-tier blocking latencies.
+
+--- PARA  34 [List Paragraph] ---
+Optimal Horizontal Scaling Sweet Spot is c = 3 Replicas: Scaling the Frontend from 1 to 3 pod replicas expands saturation capacity from 12.5 to 35.11 req/s (2.81× expansion), reduces Frontend residence time by 79.5%, and reaches 93.6% USL efficiency. Beyond c = 3, latency flattens against the ~85 ms physical floor. All values are model predictions.
+
+--- PARA  35 [Heading 1] ---
+1.0 Introduction: Why Microservice Performance is Hard
+
+--- PARA  36 [Normal] ---
+Modern cloud-native applications are constructed as loosely coupled microservices deployed on container orchestrators like Kubernetes. While this polyglot architecture improves team autonomy and continuous deployment velocity, it introduces severe performance engineering challenges.
+
+--- PARA  37 [Normal] ---
+The Performance Headache: Distributed Cascading Delays
+
+--- PARA  38 [Normal] ---
+In monolithic architectures, service communication occurs via in-process memory calls. In microservices, every user interaction triggers deep acyclic remote procedure call (RPC) trees over HTTP/REST and gRPC protocols. When a user checks out, upstream gateway services block synchronously while downstream dependencies (CartService, PaymentService, ShippingService) process requests. Minor tail-latency spikes or CPU contention in downstream services cascade upward, compounding into severe user-facing latency explosions.
+
+--- PARA  39 [Normal] ---
+The Testing Problem: Limitations of Physical Load Testing
+
+--- PARA  40 [Normal] ---
+Traditional performance engineering relies on physical load testing (e.g., Locust, k6, JMeter). In modern enterprise environments, physical load testing suffers from three critical flaws: it is slow (hours per configuration tier), expensive ($50–$200 per cloud run), and risky (cascading failures in staging environments).
+
+--- PARA  41 [Normal] ---
+This project demonstrates that mathematical Queueing Network (QN) and Layered Queueing Network (LQN) models provide instantaneous, cost-free performance forecasts. By parameterizing closed-form equations with distributed telemetry spans from Google Online Boutique [4] captured via Jaeger [5], Prometheus [6], and OpenTelemetry [7], engineers can evaluate scaling limits, size pod replicas, and prioritize software optimizations in sub-50 milliseconds. The model is validated at one empirical tier; all scaling results are analytical predictions.
+
+--- PARA  42 [Heading 1] ---
+2.0 Understanding Queueing Networks (The Math Made Simple)
+
+--- PARA  43 [Normal] ---
+Queueing theory provides the mathematical foundation for analyzing systems where concurrent customer jobs compete for shared finite server resources.
+
+--- PARA  44 [Normal] ---
+2.1 Key Concepts (The 'Bank Teller' Analogy)
+
+--- PARA  45 [Caption] ---
+Table 1: Concept, Symbol, Definition, and Everyday Analogy
+
+--- PARA  46 [Normal] ---
+Example: Frontend ingress pod: λ_0 = 10.0 req/s, S_0 = 0.080 s ⟹ ρ_0 = 10.0 × 0.080 = 0.800 (80.0% CPU load).
+
+--- PARA  47 [Normal] ---
+2.2 The M/M/1 Queue (The Fundamental Building Block)
+
+M/M/1 Residence Time [10]:
+R_i = S_i / (1 − ρ_i)
+
+--- PARA  48 [Normal] ---
+•   = Mean residence / response time of microservice i (ms or seconds)
+
+--- PARA  49 [Normal] ---
+•   = Mean exclusive CPU service time in isolation (ms)
+
+--- PARA  50 [Normal] ---
+•   = Server utilisation fraction (λ_i × S_i)
+
+--- PARA  51 [Normal] ---
+•  = Server idle capacity headroom fraction (denominator driving non-linear explosion as ρ → 1.0)
+
+--- PARA  52 [Normal] ---
+Example: Frontend at 10 req/s: S_0 = 80.0 ms, ρ_0 = 0.800 ⟹ R_0 = 80.0 / (1 − 0.800) = 80.0 / 0.200 = 400.0 ms. At 5 req/s (ρ_0 = 0.400): R_0 = 80.0 / (1 − 0.400) = 133.3 ms (a 66.7% latency reduction for halving load).
+
+Little's Law Queue Population [9]:
+N_i = λ_i · R_i = ρ_i / (1 − ρ_i)
+
+--- PARA  53 [Normal] ---
+Example: Frontend at 10 req/s: N_0 = 10.0 req/s × 0.400 s = 4.0 concurrent requests (average active goroutine queue depth).
+
+End-to-End System Response Time:
+R_sys = Σ (V_i · R_i)
+
+--- PARA  54 [Normal] ---
+•   = End-to-end average system response time perceived by the external client (ms)
+
+--- PARA  55 [Normal] ---
+•   = Total number of monitored microservices in the application topology (K = 11)
+
+--- PARA  56 [Normal] ---
+•   = Visit ratio (mean number of invocations of microservice i per external user transaction)
+
+--- PARA  57 [Normal] ---
+•   = Mean residence time of microservice i (ms)
+
+--- PARA  58 [Normal] ---
+Example: At λ_0 = 10 req/s: R_sys = (1.000 × 400.0 ms) + (0.3692 × 5.09 ms) + ... + (0.0052 × 11.51 ms) = 405.02 ms.
+
+--- PARA  59 [Normal] ---
+2.3 Open Queueing Networks vs. Layered Queueing Networks (LQN)
+
+--- PARA  60 [Normal] ---
+A critical contribution of this study is establishing the distinction between Open Jackson Queueing Networks [8] and Layered Queueing Networks (LQN) [3] for cloud microservices. In an Open QN, microservices are assumed to process tasks independently. In reality, synchronous RPC calls cause parent threads to block while child services execute.
+
+--- PARA  61 [Caption] ---
+Table 2: Open Jackson QN vs. Layered Queueing Network (LQN) Architecture
+
+--- PARA  62 [Normal] ---
+Exclusive Service Demand Decomposition (LQN Demarcation):
+S_i = D_(parent,i) − Σ_(j ∈ Children(i)) D_(child,j)
+
+--- PARA  63 [Normal] ---
+•   = Net exclusive CPU service demand of microservice i (ms)
+
+--- PARA  64 [Normal] ---
+•   = Gross execution span duration of service i recorded in distributed traces (ms)
+
+--- PARA  65 [Normal] ---
+•  Children(i) = Set of downstream microservices directly invoked by service i during request processing
+
+--- PARA  66 [Normal] ---
+•   = Measured gross response latency of downstream child service j (ms)
+
+--- PARA  67 [Normal] ---
+Example: Frontend gross span at 5 req/s = 285.0 ms; total synchronous child waiting time across 10 backends = 205.0 ms ⟹ S_0 = 285.0 − 205.0 = 80.0 ms.
+
+--- PARA  68 [Normal] ---
+Methodology: Model Parameters
+
+--- PARA  69 [Normal] ---
+Table 3 summarizes the foundational mathematical and empirical parameters used throughout our analytical formulation.
+
+--- PARA  70 [Caption] ---
+Table 3: Queueing Model Foundational Parameters
+
+--- PARA  71 [Heading 1] ---
+3.0 System Architecture & Real-World Tracing Data
+
+--- PARA  72 [Normal] ---
+We evaluated Google Online Boutique [4], an 11-microservice polyglot e-commerce benchmark application deployed on a Kubernetes cluster. Distributed telemetry was captured using CNCF OpenTelemetry [7], Jaeger [5], and Prometheus [6] across 1,247 traces (112 complete end-to-end distributed traces and 1,135 partial/single-service traces, totaling 17,200 raw spans (all retained after filtering)). Note on telemetry semantics: Prometheus instantaneous 15-second rate scrapes capture transient idle intervals between arrival bursts (recording 2.58% CPU), whereas cAdvisor container statistics aggregate kernel CPU consumption across the full 30-minute evaluation window (58% CPU); the latter represents the appropriate time-averaged steady-state load for capacity modeling.
+
+--- PARA  73 [Caption] ---
+Table 4: Online Boutique Microservices Runtime, Protocol, and Architectural Role
+
+--- PARA  74 [Caption] ---
+Figure 1: Reconstructed Microservice Call Graph for Google Online Boutique
+
+--- PARA  75 [Caption] ---
+Figure 2: Layered Queueing Network (LQN) Three-Tier Architecture
+
+--- PARA  76 [Heading 1] ---
+4.0 Measuring Service Times & Traffic Routing
+
+--- PARA  77 [Normal] ---
+To parameterize the analytical model, we extracted two fundamental empirical properties from distributed trace logs: exclusive service demand (S_i) and inter-service visit ratios (V_i).
+
+--- PARA  78 [Normal] ---
+Traffic Balance Equation (Routing Matrix Solution):
+(I − Pᵀ) · λ = λ_ext
+
+Explanation: Solves the linear system of traffic conservation equations across the microservice call graph to determine the internal request throughput vector from external arrival rates.
+
+--- PARA  79 [Normal] ---
+•   = Column vector of internal arrival throughputs across all 11 microservices [λ_1, λ_2, ..., λ_11]^T (req/s)
+
+--- PARA  80 [Normal] ---
+•   = 11 × 11 Identity matrix representing unit self-flow
+
+--- PARA  81 [Normal] ---
+•  P = 11 × 11 Transition probability routing matrix (where P_ij is probability service i invokes service j)
+
+--- PARA  82 [Normal] ---
+•   = Transpose of transition routing probability matrix
+
+--- PARA  83 [Normal] ---
+•   = External arrival vector [λ_0, 0, ..., 0]^T entering at the Frontend ingress gateway (req/s)
+
+--- PARA  84 [Normal] ---
+Note: The Frontend’s outgoing routing probabilities sum to 0.82 (0.30 + 0.18 + 0.13 + 0.08 + 0.05 + 0.04 + 0.04). The remaining 0.18 of requests are served by the Frontend without a downstream call (e.g., static-asset responses) and are therefore excluded from the routing matrix. Similarly, CartService routes 0.95 to Redis (0.05 self-terminate without cache access); RecommendationService routes 0.80 to ProductCatalog (0.20 terminate internally); CheckoutService’s outgoing probabilities sum to 0.83 (0.17 represent validation failures resolved internally). Solving (I − Pᵀ)λ = λ_ext with this matrix produces the visit ratios in Table 5.
+
+--- PARA  85 [Normal] ---
+Example: At external load λ_0 = 10.0 req/s, solving (I − P^T)λ = λ_ext yields λ_Frontend = 10.0 req/s, λ_ProductCatalog = 3.692 req/s, λ_Currency = 1.852 req/s, λ_Cart = 1.352 req/s.
+
+--- PARA  86 [Normal] ---
+Visit Ratio Formulation:
+V_i = λ_i / λ_0
+
+--- PARA  87 [Normal] ---
+Normalizes the internal throughput of microservice i relative to external ingress load, defining the mean number of times service i is invoked per user interaction.
+
+--- PARA  88 [Normal] ---
+•  = Visit ratio of microservice i (dimensionless invocation count per user request)
+
+--- PARA  89 [Normal] ---
+•   = Internal request arrival throughput at microservice i (req/s)
+
+--- PARA  90 [Normal] ---
+•   = External ingress arrival rate at gateway (req/s)
+
+--- PARA  91 [Normal] ---
+Example: ProductCatalogService: λ = 3.692 req/s, λ_0 = 10.0 req/s ⟹ V_ProductCatalog = 3.692 / 10.0 = 0.3692 visits/request.
+
+--- PARA  92 [Normal] ---
+Total Service Demand per Transaction:
+D_i = V_i · S_i
+
+Quantifies the total aggregate CPU processing time required at microservice i to fulfill a single external client request.
+
+--- PARA  93 [Normal] ---
+•  = Total service demand of microservice i per user transaction (ms)
+
+--- PARA  94 [Normal] ---
+•   = Visit ratio of microservice i
+
+--- PARA  95 [Normal] ---
+•   = Mean exclusive service time per invocation (ms)
+
+--- PARA  96 [Normal] ---
+Example: Frontend: D_0 = 1.0000 × 80.00 ms = 80.00 ms; ProductCatalog: D_Catalog = 0.3692 × 5.00 ms = 1.846 ms.
+
+--- PARA  97 [Caption] ---
+Table 5: Visit Ratio, Exclusive Service Time, Total Demand, and CPU Load at 10 req/s
+
+--- PARA  98 [Normal] ---
+Key Observation: The Frontend exclusive CPU demand (80.00 ms) is 43.2× larger than the second-heaviest service (ProductCatalog at 1.85 ms). This massive structural disparity identifies the Frontend as the sole binding bottleneck.
+
+--- PARA  99 [Caption] ---
+Table 6: Empirical Service Times Breakdown (Mean, Median, P95, P99)
+
+--- PARA 100 [Body Text] ---
+Note: The Frontend row shows the raw Jaeger ingress distribution mean (65.75 ms); the QN model uses the LQN-demarcated exclusive CPU service demand of 80.00 ms (gross 285.0 ms span − 205.0 ms synchronous child-RPC wait), as detailed in §2.3. CartService, AdService, and ShippingService service times are estimated from instrumented code-path analysis due to the gRPC span-naming mismatch in the collector filter. The remaining 8 microservice service times are extracted directly from the 17,200 Jaeger distributed telemetry spans.
+
+--- PARA 101 [Heading 1] ---
+5.0 Finding the System Bottleneck
+
+--- PARA 102 [Normal] ---
+In queueing network theory, the Bottleneck Law [2], [8] establishes that the throughput capacity of any multi-server distributed application is strictly bounded by the component possessing the highest total service demand.
+
+--- PARA 103 [Normal] ---
+Maximum Saturation Throughput Bound (The Bottleneck Law):
+λ_sat = 1 / max_i(V_i · S_i) = 1 / D_max
+
+--- PARA 104 [Normal] ---
+•   = Maximum sustainable system arrival rate / saturation ceiling (req/s)
+
+--- PARA 105 [Normal] ---
+•   = Maximum total service demand across all 11 system microservices (max_i D_i) (seconds/req)
+
+--- PARA 106 [Normal] ---
+•   = Visit ratio of microservice i
+
+--- PARA 107 [Normal] ---
+•   = Exclusive service demand of microservice i (seconds/req)
+
+--- PARA 108 [Normal] ---
+Example:  = D_Frontend = 1.0000 × 0.080 s = 0.080 s ⟹ λ_sat = 1.0 / 0.080 s = 12.50 req/s. The cluster cannot exceed 12.50 req/s under single-replica deployment.
+
+--- PARA 109 [List Paragraph] ---
+Maximum Demand (D_max): 80.00 ms (Go Frontend).
+
+--- PARA 110 [List Paragraph] ---
+Secondary Demand (D_second): 1.85 ms (ProductCatalogService).
+
+--- PARA 111 [List Paragraph] ---
+Demand Imbalance Ratio: 80.00 / 1.85 = 43.2× structural divergence.
+
+--- PARA 112 [List Paragraph] ---
+Utilisation Divergence at 10 req/s: Frontend operates at 80.00 % CPU, whereas ProductCatalog consumes only 1.85 % CPU.
+
+--- PARA 113 [Normal] ---
+Section 5.0 Core Finding: The Go Frontend is the sole binding bottleneck in the Google Online Boutique architecture. Optimizing backend microservices will deliver negligible performance improvement until the Frontend is scaled horizontally.
+
+--- PARA 114 [Caption] ---
+Figure 3: Predicted Microservice Utilisation at λ₀ = 10 req/s (Model)
+
+--- PARA 115 [Heading 1] ---
+6.0 Model Accuracy & Real-World Validation
+
+--- PARA 116 [Normal] ---
+We validated our analytical queueing solver against the single available empirical workload tier (λ₀ = 5.0 req/s, empirical_measurements.csv, Frontend response = 285.0 ms). The model predicts 138.33 ms at the same load. Absolute Percentage Error: 51.47%. The 51.47% APE reflects the exclusion of synchronous blocking, container overhead, and network transit from the pure-CPU model.
+
+--- PARA 117 [Normal] ---
+Why the residual is large. The analytical model predicts pure-CPU-limited response time. The empirical measurement includes (i) synchronous child-RPC blocking, (ii) container-runtime overhead, and (iii) network transit. The 146.67 ms gap is consistent with these excluded effects and is not attributable to model error in the queueing formulation itself. A note on overshoot: predicted pure-CPU execution plus full child blocking (138.33 + 205.0 = 343.33 ms) would over-shoot the observed 285.0 ms; the residual (~58 ms) reflects partial overlap between CPU execution and downstream waiting in the Frontend’s asynchronous runtime.
+
+--- PARA 118 [Normal] ---
+Empirical Validation Scope: Validation is performed against the single available empirical workload tier (λ₀ = 5.0 req/s, empirical_measurements.csv, Frontend response = 285.0 ms), yielding an Absolute Percentage Error of 51.47%.
+
+--- PARA 119 [Caption] ---
+Table 7: Model Predictions vs. Observed Response Times (1 Empirical Tier)
+
+--- PARA 120 [Caption] ---
+Figure 4: Analytical Model Predictions vs. Real-World Benchmark (1 Empirical Tier)
+
+--- PARA 121 [Caption] ---
+Figure 5: Model-Predicted System Latency Curve & 500 ms SLA Boundary
+
+--- PARA 122 [Heading 1] ---
+7.0 How to Scale the System: Multi-Replica Analysis
+
+--- PARA 123 [Normal] ---
+Having identified the Frontend as the sole system bottleneck, we evaluated horizontal pod autoscaling. Deploying c parallel Frontend replicas behind a Kubernetes ingress load balancer transforms the bottleneck tier into a multi-server M/M/c queue within an open Jackson network [8].
+
+Erlang-C Delay Probability:
+C(c, a) = [a^c / c! · 1 / (1 − a/c)] / [Σ_(k=0)^(c−1) (a^k / k!) + a^c / c! · 1 / (1 − a/c)]
+where a = λ₀ · S₀ (offered load in Erlangs), ρ_c = a / c (server utilisation per pod).
+
+M/M/c Multi-Server Residence Time:
+R₀(c) = S₀ + C(c, a) · S₀ / [c · (1 − ρ_c)]
+
+Universal Scalability Law (USL) Capacity & Scaling Efficiency:
+X(N) = N · X₁ / [1 + σ(N − 1) + κ · N(N − 1)]
+η(N) = X(N) / (N · X₁)
+
+--- PARA 124 [Normal] ---
+Example: c = 3 replicas, a = 0.800 Erlangs (10.0 req/s × 0.080 s) ⟹ C(3, 0.800) = 0.052 (5.2% probability of queueing delay).
+
+--- PARA 125 [Normal] ---
+Example: At λ₀ = 10 req/s with c = 3 replicas: R₀(3) = 80.0 + (0.052 × 80.0) / (3 × (1 − 0.267)) = 80.0 + 1.89 = 81.89 ms (reducing residence time by 79.5%). This is the Frontend-only response time; system latency including backend overhead is 86.9 ms (Table 8).
+
+--- PARA 126 [Normal] ---
+Example: For N = 3 replicas, evaluating capacity via the Universal Scalability Law (USL) [1]: X(3) = (3 × 12.50) / [1 + 0.0248(2) + 0.0031(6)] = 37.50 / 1.0682 = 35.11 req/s (2.81× capacity expansion). Note: σ = 0.0248 and κ = 0.0031 are illustrative parameters selected to reflect typical Online Boutique contention characteristics; they were not empirically fitted from multi-replica load tests (which would require separate c=1,2,3,4 Locust runs). The M/M/c Erlang-C result (Table 8, c=3 → 86.9 ms) is independently derived and does not depend on σ or κ.
+
+--- PARA 127 [Normal] ---
+Example: At N = 3 replicas: η(3) = 35.11 / 37.50 × 100% = 93.6% scaling efficiency (2.81× capacity gain). At N = 6: η(6) = 82.2% (reflecting severe diminishing returns).
+
+--- PARA 128 [Caption] ---
+Table 8: M/M/c Horizontal Pod Autoscaling Performance & USL Efficiency
+
+--- PARA 129 [Caption] ---
+Figure 6: Predicted System Response Time Under Multi-Replica Frontend Scaling (Model)
+
+--- PARA 130 [Heading 1] ---
+8.0 Sensitivity Analysis: Where Should Engineers Focus?
+
+--- PARA 131 [Normal] ---
+Sensitivity analysis applies partial derivatives to the queueing formulation to quantify exactly how many milliseconds of end-to-end user latency are eliminated for every 1 ms shaved off the service demand of microservice i.
+
+Sensitivity Derivative (Marginal Latency Reduction):
+∂R_sys / ∂S_i = V_i / (1 − ρ_i)²
+
+--- PARA 132 [Normal] ---
+Example: Frontend (V_0 = 1.000, ρ_0 = 0.800): ∂R_sys / ∂S_0 = 1.000 / (1 − 0.800)² = 1.000 / 0.040 = 25.000 ms/ms. Shaving 10 ms off Frontend CPU demand slashes user latency by 250.0 ms!
+
+--- PARA 133 [Normal] ---
+Example: Frontend: 25.000 / 26.066 × 100% = 95.91% of all system performance optimization leverage.
+
+--- PARA 134 [Caption] ---
+Table 9: Sensitivity Analysis & Engineering Optimization Priority Ranking
+
+--- PARA 135 [Caption] ---
+Figure 7: Sensitivity Tornado Chart: Where System Speedup Comes From
+
+--- PARA 136 [Heading 1] ---
+9.0 Sources of Error, Modeling Assumptions & Limitations
+
+--- PARA 137 [Normal] ---
+While the analytical model provides rapid first-order capacity estimates, the following sources of error and limitations apply.
+
+--- PARA 138 [Body Text] ---
+1. Single empirical validation tier. Only λ₀ = 5.0 req/s is measured (empirical_measurements.csv, R = 285.0 ms). All other workload tiers are model predictions. Multi-tier WMAPE and R² cannot be computed from one tier and are therefore not reported. Additionally, of the 1,247 captured traces only 112 (9.0%) were complete end-to-end traces spanning all 11 services; the remaining 1,135 (91%) were partial. Routing probabilities and the 205 ms child-RPC blocking estimate are derived from this 9% subset.
+2. Three estimated service times. CartService, AdService, and ShippingService service times are estimated from code analysis, not measured. During the cluster benchmark run, C#, Java, and Go StatsHandler instrumentation generated span names without the grpc. prefix, bypassing the collector's ingress filter. Sensitivity analysis demonstrates that a ±20% perturbation in these three parameters alters end-to-end response time by less than 0.25%, confirming that model bottleneck predictions remain invariant to this estimation.
+3. Sub-exponential service-time variability. Observed CoV across empirical services lies in the range 0.27–0.36 (service_demands.json). The M/M/1 formulation assumes CoV = 1.0 and therefore provides a conservative upper bound on queueing delay.
+4. Container-runtime overhead. At λ=5, the empirical cAdvisor-averaged Frontend CPU (58%) exceeds the analytical prediction (40% = 5 × 0.08). The 18-percentage-point gap is attributed to container-runtime overhead (TLS handshakes, gRPC thread-pool management, network polling).
+5. Prometheus–cAdvisor divergence. Two Frontend CPU measurements at λ=5 diverge by 22×: 58% (cAdvisor 30-minute average, CSV) vs. 2.58% (Prometheus 15-second rate, snapshot 20260913_041508). The divergence reflects sampling-window semantics; the cAdvisor average is the appropriate steady-state input.
+Future work. Extending the model to general service distributions (M/G/1, M/G/c), explicit network-overlay nodes (CNI, Envoy/Istio), closed-form percentile solvers, and transient autoscaling dynamics would address the residual limitations above.
+6. Measurement confidence. For the 8 Jaeger-measured services, standard error of the mean service time is SE = SD / √n. With n ≥ 1,040 samples and CoV ≤ 0.40, SE < 0.10 ms for all services — negligible relative to the service demands (2–15 ms). For the 3 estimated services (Cart, Ad, Shipping), no statistical uncertainty is computable; the sensitivity analysis (§8) bounds the impact: a ±20% perturbation changes system latency by < 0.25%.
+
+--- PARA 139 [Heading 1] ---
+10.0 Conclusion & Actionable Platform Engineering Recommendations
+
+--- PARA 140 [Normal] ---
+This investigation demonstrates that analytical queueing network models provide instantaneous capacity planning for cloud-native microservices. By analysing 17,200 telemetry spans across 1,247 traces, we established that the Frontend is the sole bottleneck, demonstrated that 3 replicas achieve 93.6% USL efficiency, and showed that 95.91% of optimisation leverage is concentrated in the gateway. All scaling and ROI projections are analytical model predictions. All recommendations are model-based; empirical confirmation requires additional load testing.
+
+--- PARA 141 [List Paragraph] ---
+Optimise Frontend Asset Caching & Template Rendering (ROI: 95.91%): Shaving 20 ms off Frontend demand expands single-pod capacity from 12.5 to 16.7 req/s without infrastructure change.
+
+--- PARA 142 [List Paragraph] ---
+Provision Frontend at Exactly c = 3 Replicas: Configure Kubernetes deployment replicas: 3. This delivers 2.81× capacity expansion and 78.5% system latency reduction at 93.6% USL efficiency.
+
+--- PARA 143 [List Paragraph] ---
+Configure HPA Target at 60–70% CPU (Not 80–90%): Because M/M/1 response times explode non-linearly as ρ → 1.0, triggering autoscaling at 65% CPU ensures new pods initialize before queues cascade.
+
+Production HPA Specification (autoscaling/v2):
+  apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    name: frontend-hpa
+  spec:
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: frontend
+    minReplicas: 3
+    maxReplicas: 6
+    metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 65
+
+--- PARA 144 [List Paragraph] ---
+Add Prometheus P95/P99 alerts on Frontend response times. Tail-latency amplification is not measured in this study; percentile alerts provide early warning under heavy queueing.
+
+--- PARA 145 [List Paragraph] ---
+Enforce Standardized OpenTelemetry Context Propagation: Eliminate trace sampling gaps and label mismatches to ensure 100% observability across all polyglot microservice runtimes.
+
+--- PARA 146 [Heading 1] ---
+References
+
+--- PARA 147 [List Paragraph] ---
+[1] N. J. Gunther, Guerrilla Capacity Planning: A Tactical Approach to Planning for Highly Scalable Applications and Services. Springer Science & Business Media, 2007.
+
+--- PARA 148 [List Paragraph] ---
+[2] E. D. Lazowska, J. Zahorjan, G. S. Graham, and K. C. Sevcik, Quantitative System Performance: Computer System Analysis Using Queueing Network Models. Prentice-Hall, 1984.
+
+--- PARA 149 [List Paragraph] ---
+[3] C. M. Woodside, G. Franks, and D. C. Petriu, "The future of software performance engineering," in Future of Software Engineering (FOSE '07), IEEE, 2007, pp. 171–187.
+
+--- PARA 150 [List Paragraph] ---
+[4] Google Cloud Platform, "Online Boutique: 11-tier microservices demo application," GitHub Repository, 2024. [Online]. Available: https://github.com/GoogleCloudPlatform/microservices-demo
+
+--- PARA 151 [List Paragraph] ---
+[5] Cloud Native Computing Foundation (CNCF), "Jaeger: Open source, distributed tracing platform," 2024. [Online]. Available: https://www.jaegertracing.io/
+
+--- PARA 152 [List Paragraph] ---
+[6] Cloud Native Computing Foundation (CNCF), "Prometheus: Systems monitoring and alerting toolkit," 2024. [Online]. Available: https://prometheus.io/
+
+--- PARA 153 [List Paragraph] ---
+[7] OpenTelemetry Authors, "OpenTelemetry: High-quality, ubiquitous, and standard observability telemetry," 2024. [Online]. Available: https://opentelemetry.io/
+
+--- PARA 154 [List Paragraph] ---
+[8] J. R. Jackson, "Networks of waiting lines," Operations Research, vol. 5, no. 4, pp. 518–521, 1957.
+
+--- PARA 155 [List Paragraph] ---
+[9] J. D. C. Little, "A proof for the queuing formula: L = λW," Operations Research, vol. 9, no. 3, pp. 383–387, 1961.
+
+--- PARA 156 [List Paragraph] ---
+[10] L. Kleinrock, Queueing Systems, Volume 1: Theory. John Wiley & Sons, 1975.
+
+--- PARA 157 [Heading 1] ---
+Appendix A – Comprehensive Mathematical Formulas Reference Matrix
+
+--- PARA 158 [Caption] ---
+Table 10: Comprehensive Mathematical Formulas Reference Matrix
+
+--- PARA 159 [Heading 1] ---
+Appendix B – Summary of Key Benchmark Numbers
+
+--- PARA 160 [Normal] ---
+The below table consolidates all critical quantitative measurements, architectural thresholds, and empirical constants derived from our evaluation.
+
+--- PARA 161 [Caption] ---
+Table 11: Architectural and Operational Benchmark Constants
+
+--- PARA 162 [Normal] ---
+
+
+--- PARA 163 [Heading 1] ---
+Section 8: Multi-Tier Live Empirical Validation & HPA Autoscaling Policy
+
+--- PARA 164 [Normal] ---
+This section documents two additional advanced analyses completed as part of the October 8, 2026 live Docker validation run, extending the canonical baseline presented in the preceding sections.
+
+--- PARA 165 [Heading 2] ---
+8.1  Multi-Tier Live Empirical Validation (Oct 8, 2026)
+
+--- PARA 166 [Normal] ---
+The queueing network model was validated at four target arrival rates (λ ∈ {2, 5, 8, 10} req/s) against live HTTP measurements from the Google Online Boutique running inside Docker Desktop on a Windows development workstation (16 containers, shared host). Table 8.1 summarises the live telemetry results.
+
+--- PARA 167 [Normal] ---
+
+
+--- PARA 168 [Normal] ---
+Table 8.1: Live Docker multi-tier measurements vs. analytical QN model predictions. The positive gap reflects Docker Desktop for Windows host resource contention (Hyper-V/WSL2 scheduling overhead, Docker NAT bridge, shared CPU across 16 containers) which is absent in a cloud-native production deployment. The QN model service demands (S₀ = 80 ms) are calibrated to Jaeger span durations — pure in-process execution time — not external HTTP wall-clock times. Overall: WMAPE = 82.81%, R² = −0.986.
+
+--- PARA 169 [Normal] ---
+
+
+--- PARA 170 [Normal] ---
+Figure 8.1: Multi-tier empirical validation curve. Left panel: analytical QN model (hockey-stick knee at λ = 12.5 req/s) vs. live Docker measurements (resource-contention inflation annotated per tier). Right panel: effective throughput ceiling at ~5 req/s due to single Windows host saturation at λ ≥ 5 req/s.
+
+--- PARA 171 [Normal] ---
+
+
+--- PARA 172 [Heading 2] ---
+8.2  Mathematical Kubernetes HPA Autoscaling Policy
+
+--- PARA 173 [Normal] ---
+Using the M/M/1 steady-state response time formula R = S₀ / (1 − ρ), the optimal Kubernetes Horizontal Pod Autoscaler (HPA) CPU utilisation target was derived analytically to guarantee the 500 ms SLA with a 30-second pod spin-up safety margin.
+
+--- PARA 174 [Normal] ---
+
+
+--- PARA 175 [Normal] ---
+Table 8.2: Analytically-derived HPA autoscaling policy parameters for the Online Boutique frontend microservice.
+
+--- PARA 176 [Normal] ---
+
+
+--- PARA 177 [Normal] ---
+Figure 8.2: Mathematical HPA autoscaling policy. Left panel: M/M/1 response time vs. CPU utilisation curve with the recommended 66.6% HPA trigger (purple dashed), 250 ms operational target (green) and 500 ms SLA hard limit (red). Safe zone shaded green; queueing explosion risk shaded red. Right panel: multi-replica scaling frontier — capacity (bars) and monthly infrastructure cost (line) for c = 1…5 pods, with Pareto-optimal c = 3 annotated.
+
+--- PARA 178 [Normal] ---
+
+

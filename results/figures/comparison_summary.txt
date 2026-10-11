@@ -7,21 +7,22 @@ PER-SERVICE COMPARISON
 --------------------------------------------------------------------------------
 Service                    Pred RT(ms)  Meas RT(ms)    Error(ms)   Error(%)
 --------------------------------------------------------------------------------
-Frontend                        400.00       285.00       115.00      40.4%
-ProductCatalogService             5.09         8.20        -3.11      37.9%
-CurrencyService                   3.02         5.10        -2.08      40.8%
-CartService                       4.02         6.80        -2.78      40.9%
-RecommendationService             7.55        12.40        -4.85      39.2%
-AdService                         5.82         9.10        -3.28      36.1%
-CheckoutService                  14.58        22.50        -7.92      35.2%
-ShippingService                   3.81         7.20        -3.39      47.1%
-PaymentService                    9.51        14.30        -4.79      33.5%
-EmailService                     11.51        18.00        -6.49      36.1%
+Frontend                        133.33       285.00      -151.67      53.2%
+ProductCatalogService             0.55         8.20        -7.65      93.3%
+CurrencyService                   1.20         5.10        -3.90      76.4%
+CartService                      58.62         6.80        51.82     762.1%
+RecommendationService             6.70        12.40        -5.70      46.0%
+AdService                        33.80         9.10        24.70     271.4%
+CheckoutService                  45.43        22.50        22.93     101.9%
+ShippingService                   8.86         7.20         1.66      23.1%
+PaymentService                    8.30        14.30        -6.00      42.0%
+EmailService                      3.26        18.00       -14.74      81.9%
+Redis                             2.00         2.00         0.00       0.0%
 
 ERROR METRICS SUMMARY
 ----------------------------------------
-  RMSE            36.6338
-  MAE             15.3701
-  MAPE_%          38.7067
+  RMSE            49.7139
+  MAE             26.4339
+  MAPE_%          141.0272
 
 ================================================================================

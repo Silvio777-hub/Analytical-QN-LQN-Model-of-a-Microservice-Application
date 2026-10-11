@@ -1,0 +1,42 @@
+{
+  "timestamp": "20261008_192548",
+  "request_rates": {
+    "CheckoutService": 1.4776963191061367,
+    "CurrencyService": 6.9785400360367245,
+    "EmailService": 0.10486877103333875,
+    "Frontend": 26.369729152564997,
+    "PaymentService": 0.10486877103333875,
+    "ProductCatalogService": 13.632940234334036,
+    "RecommendationService": 3.584605264412306,
+    "CartService": 0.787,
+    "AdService": 0.4,
+    "ShippingService": 0.287,
+    "Redis": 0.642
+  },
+  "response_times": {
+    "CheckoutService": 0.08027000732258065,
+    "CurrencyService": 0.0012572820983606542,
+    "EmailService": 0.0010963249999999996,
+    "Frontend": 0.0718706485242227,
+    "PaymentService": 0.012746682181818184,
+    "ProductCatalogService": 0.0007069293636363637,
+    "RecommendationService": 0.007110495545212769,
+    "CartService": 0.0068,
+    "AdService": 0.0091,
+    "ShippingService": 0.0072,
+    "Redis": 0.002
+  },
+  "cpu_utilization": {
+    "CartService": 0.0397,
+    "AdService": 1.3549,
+    "ShippingService": 0.0121,
+    "PaymentService": 0.0005,
+    "EmailService": 0.0013,
+    "Redis": 0.0141,
+    "ProductCatalogService": 0.0109,
+    "RecommendationService": 0.053200000000000004,
+    "CurrencyService": 0.1284,
+    "CheckoutService": 0.0015,
+    "Frontend": 0.0824
+  }
+}

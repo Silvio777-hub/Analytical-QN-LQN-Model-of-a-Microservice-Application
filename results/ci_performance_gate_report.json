@@ -1,0 +1,159 @@
+{
+  "status": "PASSED",
+  "all_passed": true,
+  "gates": [
+    {
+      "id": "GATE-01",
+      "name": "Frontend Service Demand Bound",
+      "description": "Verifies that frontend single-visit CPU demand does not exceed the architectural threshold.",
+      "measured": "80.00 ms",
+      "threshold": "<= 85.00 ms",
+      "status": "PASS",
+      "passed": true
+    },
+    {
+      "id": "GATE-02",
+      "name": "Minimum Saturation Throughput",
+      "description": "Verifies that the theoretical asymptotic bottleneck capacity meets minimum traffic requirement.",
+      "measured": "12.50 req/s",
+      "threshold": ">= 11.50 req/s",
+      "status": "PASS",
+      "passed": true
+    },
+    {
+      "id": "GATE-03",
+      "name": "Nominal Response Time SLA",
+      "description": "Ensures mean end-to-end response time under nominal load (5.0 req/s) leaves >= 50% margin to 500ms SLA.",
+      "measured": "139.62 ms",
+      "threshold": "<= 250.00 ms",
+      "status": "PASS",
+      "passed": true
+    },
+    {
+      "id": "GATE-04",
+      "name": "Downstream Bottleneck Invariance",
+      "description": "Verifies frontend remains the sole structural bottleneck; downstream services operate well below saturation.",
+      "measured": "Max downstream 57.94 ms (ratio: 72.43%)",
+      "threshold": "< 80.00 ms (ratio < 100%)",
+      "status": "PASS",
+      "passed": true
+    },
+    {
+      "id": "GATE-05",
+      "name": "Near-Saturation Knee Stability (10 req/s)",
+      "description": "Verifies that approaching 80% saturation preserves response time under 600 ms before hockey-stick cliff.",
+      "measured": "400.00 ms (U = 80.0%)",
+      "threshold": "<= 600.00 ms",
+      "status": "PASS",
+      "passed": true
+    }
+  ],
+  "demands_analyzed": {
+    "frontend": 80.0,
+    "productcatalogservice": 0.5444442740286298,
+    "currencyservice": 1.1998173302107726,
+    "cartservice": 57.94214383561644,
+    "recommendationservice": 6.679170297029704,
+    "adservice": 33.671549999999996,
+    "checkoutservice": 45.05520952380952,
+    "shippingservice": 8.854446666666666,
+    "paymentservice": 8.296294117647058,
+    "emailservice": 3.256267326732673,
+    "redis": 2.0
+  },
+  "predictions_analyzed": {
+    "service_names": [
+      "Frontend",
+      "ProductCatalogService",
+      "CurrencyService",
+      "CartService",
+      "RecommendationService",
+      "AdService",
+      "CheckoutService",
+      "ShippingService",
+      "PaymentService",
+      "EmailService",
+      "Redis"
+    ],
+    "arrival_rates": [
+      5.0,
+      3.1846243,
+      1.38568,
+      0.19952485,
+      0.449,
+      0.109,
+      0.18350000000000002,
+      0.07102485,
+      0.025396400000000003,
+      0.02526795,
+      0.18954860749999997
+    ],
+    "visit_ratios": [
+      1.0,
+      0.6369248599999999,
+      0.277136,
+      0.03990497,
+      0.0898,
+      0.0218,
+      0.0367,
+      0.01420497,
+      0.00507928,
+      0.00505359,
+      0.03790972149999999
+    ],
+    "utilizations": [
+      0.4,
+      0.0017338504650674332,
+      0.0016625628781264635,
+      0.011560897557479795,
+      0.002998947463366337,
+      0.003670198949999999,
+      0.008267630947619049,
+      0.000628885746333,
+      0.00021069600392941177,
+      8.227919999851485e-05,
+      0.00037909721499999996
+    ],
+    "mean_response_times_ms": [
+      133.33333333333334,
+      0.5453898985578874,
+      1.2018154239209435,
+      58.6198418217534,
+      6.699261028898748,
+      33.79558652618302,
+      45.430814733677224,
+      8.860018606080276,
+      8.29804248203846,
+      3.256535271849608,
+      2.000758481968402
+    ],
+    "mean_queue_lengths": [
+      0.6666666666666667,
+      0.0017368619239219833,
+      0.001665331596618773,
+      0.011696115146509074,
+      0.0030079682019755385,
+      0.0036837189313539496,
+      0.008336554503629771,
+      0.0006292814924940607,
+      0.00021074040609084157,
+      8.22859704223323e-05,
+      0.00037924098420092435
+    ],
+    "throughputs": [
+      5.0,
+      3.1846243,
+      1.38568,
+      0.19952485,
+      0.449,
+      0.109,
+      0.18350000000000002,
+      0.07102485,
+      0.025396400000000003,
+      0.02526795,
+      0.18954860749999997
+    ],
+    "system_throughput": 5.0,
+    "system_response_time_ms": 139.61895316477674
+  }
+}

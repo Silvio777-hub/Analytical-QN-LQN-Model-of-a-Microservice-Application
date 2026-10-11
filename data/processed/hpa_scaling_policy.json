@@ -1,0 +1,59 @@
+{
+  "hpa_policy": {
+    "sla_target_ms": 250.0,
+    "sla_hard_limit_ms": 500.0,
+    "max_utilization_target_rho": 0.68,
+    "max_utilization_hard_rho": 0.84,
+    "recommended_hpa_cpu_percent": 66.6,
+    "scale_up_trigger_rps_per_pod": 8.33,
+    "saturation_cliff_rps_per_pod": 10.5
+  },
+  "replica_capacity_tradeoffs": [
+    {
+      "replicas": 1,
+      "saturation_capacity_rps": 12.5,
+      "sla_capacity_500ms_rps": 10.5,
+      "operational_capacity_250ms_rps": 8.5,
+      "monthly_cost_usd": 93.45,
+      "cost_per_rps_capacity_usd": 8.9
+    },
+    {
+      "replicas": 2,
+      "saturation_capacity_rps": 25.0,
+      "sla_capacity_500ms_rps": 21.0,
+      "operational_capacity_250ms_rps": 17.0,
+      "monthly_cost_usd": 111.9,
+      "cost_per_rps_capacity_usd": 5.33
+    },
+    {
+      "replicas": 3,
+      "saturation_capacity_rps": 37.5,
+      "sla_capacity_500ms_rps": 31.5,
+      "operational_capacity_250ms_rps": 25.5,
+      "monthly_cost_usd": 130.34,
+      "cost_per_rps_capacity_usd": 4.14
+    },
+    {
+      "replicas": 4,
+      "saturation_capacity_rps": 50.0,
+      "sla_capacity_500ms_rps": 42.0,
+      "operational_capacity_250ms_rps": 34.0,
+      "monthly_cost_usd": 148.79,
+      "cost_per_rps_capacity_usd": 3.54
+    },
+    {
+      "replicas": 5,
+      "saturation_capacity_rps": 62.5,
+      "sla_capacity_500ms_rps": 52.5,
+      "operational_capacity_250ms_rps": 42.5,
+      "monthly_cost_usd": 167.24,
+      "cost_per_rps_capacity_usd": 3.19
+    }
+  ],
+  "cloud_pricing": {
+    "vcpu_hourly_usd": 0.0445,
+    "ram_gb_hourly_usd": 0.0059,
+    "monthly_cluster_overhead_usd": 75.0,
+    "monthly_per_pod_usd": 18.45
+  }
+}
