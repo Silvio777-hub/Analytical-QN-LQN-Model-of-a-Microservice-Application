@@ -1,40 +1,49 @@
 """
-Generate professional widescreen PowerPoint presentation for SPE Final Project.
+generate_presentation.py
+========================
+Generates a professional widescreen PowerPoint presentation (16:9)
+for the SPE Final Project defense / viva.
+
+Updated with canonical October 8, 2026 reconciled empirical data:
+  - 6,642 spans across 687 traces (authoritative Jaeger telemetry)
+  - Frontend exclusive CPU demand S₀ = 18.88 ms (13.43× demand imbalance)
+  - Single-replica capacity ceiling X₁ = 52.97 req/s
+  - Multi-tier live validation: WMAPE = 82.81%, R² = −0.986 across 4 tiers
+  - Horizontal scaling: c = 3 replicas expands capacity to 148.75 req/s (93.6% USL)
+  - Sensitivity analysis: Frontend captures 56.44% of total optimization ROI
 """
 import os, sys
+sys.stdout.reconfigure(encoding='utf-8')
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 
-sys.stdout.reconfigure(encoding='utf-8')
-
 prs = Presentation()
 prs.slide_width = Inches(13.333)
 prs.slide_height = Inches(7.5)
 blank_layout = prs.slide_layouts[6]
 
-# Color Palette
-BG_DARK = RGBColor(15, 23, 42)       # Navy Slate (#0F172A)
-BG_LIGHT = RGBColor(248, 249, 250)   # Clean Off-White (#F8F9FA)
-PRIMARY = RGBColor(27, 42, 74)       # Deep Corporate Navy (#1B2A4A)
-SECONDARY = RGBColor(71, 85, 105)    # Slate Muted (#475569)
-ACCENT_BLUE = RGBColor(14, 116, 144) # Deep Cyan (#0E7490)
-ACCENT_CYAN = RGBColor(6, 182, 212)  # Bright Cyan (#06B6D4)
-CARD_BG = RGBColor(255, 255, 255)    # Pure White
-CARD_BORDER = RGBColor(226, 232, 240)# Light Border (#E2E8F0)
+# Professional Color Palette
+BG_DARK = RGBColor(15, 23, 42)        # Navy Slate (#0F172A)
+BG_LIGHT = RGBColor(248, 249, 250)    # Clean Off-White (#F8F9FA)
+PRIMARY = RGBColor(27, 42, 74)        # Deep Corporate Navy (#1B2A4A)
+SECONDARY = RGBColor(71, 85, 105)     # Slate Muted (#475569)
+ACCENT_BLUE = RGBColor(14, 116, 144)  # Deep Cyan (#0E7490)
+ACCENT_CYAN = RGBColor(6, 182, 212)   # Bright Cyan (#06B6D4)
+CARD_BG = RGBColor(255, 255, 255)     # Pure White
+CARD_BORDER = RGBColor(226, 232, 240) # Light Border (#E2E8F0)
 TEXT_DARK = RGBColor(15, 23, 42)
 TEXT_MUTED = RGBColor(100, 116, 139)
 HIGHLIGHT_GREEN = RGBColor(16, 185, 129)
 HIGHLIGHT_AMBER = RGBColor(245, 158, 11)
 
+
 def add_header(slide, title_text, category_text="SOFTWARE PERFORMANCE ENGINEERING"):
-    # Header banner container
-    title_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.4), Inches(11.7), Inches(0.9))
-    tf = title_box.text_frame
+    tb = slide.shapes.add_textbox(Inches(0.8), Inches(0.4), Inches(11.73), Inches(0.9))
+    tf = tb.text_frame
     tf.word_wrap = True
-    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
     
     p_cat = tf.paragraphs[0]
     p_cat.text = category_text.upper()
@@ -47,14 +56,17 @@ def add_header(slide, title_text, category_text="SOFTWARE PERFORMANCE ENGINEERIN
     p_title.font.size = Pt(22)
     p_title.font.bold = True
     p_title.font.color.rgb = PRIMARY
+    p_title.space_before = Pt(2)
 
-def add_card(slide, left, top, width, height, bg_color=CARD_BG, border_color=CARD_BORDER):
+
+def add_card(slide, left, top, width, height, bg=CARD_BG, border=CARD_BORDER):
     shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height)
     shape.fill.solid()
-    shape.fill.fore_color.rgb = bg_color
-    shape.line.color.rgb = border_color
-    shape.line.width = Pt(1)
+    shape.fill.fore_color.rgb = bg
+    shape.line.color.rgb = border
+    shape.line.width = Pt(1.5)
     return shape
+
 
 # ==========================================
 # SLIDE 1: Title Slide (Dark Theme)
@@ -65,36 +77,35 @@ bg1.fill.solid()
 bg1.fill.fore_color.rgb = BG_DARK
 bg1.line.fill.background()
 
-# Title text box
-tb1 = slide1.shapes.add_textbox(Inches(1.0), Inches(1.8), Inches(11.333), Inches(4.0))
+tb1 = slide1.shapes.add_textbox(Inches(1.2), Inches(1.8), Inches(10.933), Inches(4.5))
 tf1 = tb1.text_frame
 tf1.word_wrap = True
 
-p_sub = tf1.paragraphs[0]
-p_sub.text = "SOFTWARE PERFORMANCE ENGINEERING • FINAL RESEARCH REPORT"
-p_sub.font.size = Pt(12)
-p_sub.font.bold = True
-p_sub.font.color.rgb = ACCENT_CYAN
+p1_sub = tf1.paragraphs[0]
+p1_sub.text = "RESEARCH & TECHNICAL REPORT DEFENSE • ACADEMIC YEAR 2025–2026"
+p1_sub.font.size = Pt(12)
+p1_sub.font.bold = True
+p1_sub.font.color.rgb = ACCENT_CYAN
 
-p_main = tf1.add_paragraph()
-p_main.text = "Analytical QN & LQN Modeling of a\nCloud-Native Microservice Architecture"
-p_main.font.size = Pt(36)
-p_main.font.bold = True
-p_main.font.color.rgb = RGBColor(255, 255, 255)
-p_main.space_before = Pt(14)
-p_main.space_after = Pt(14)
+p1_title = tf1.add_paragraph()
+p1_title.text = "Analytical Queueing Network Modeling\nof a Polyglot Microservice Application"
+p1_title.font.size = Pt(36)
+p1_title.font.bold = True
+p1_title.font.color.rgb = RGBColor(255, 255, 255)
+p1_title.space_before = Pt(12)
+p1_title.space_after = Pt(16)
 
-p_desc = tf1.add_paragraph()
-p_desc.text = "Rigorous Capacity Planning, Bottleneck Isolation, and Autoscaling Optimization\non Google Online Boutique via Open Jackson Networks & Universal Scalability Law"
-p_desc.font.size = Pt(16)
-p_desc.font.color.rgb = RGBColor(148, 163, 184)
+p1_desc = tf1.add_paragraph()
+p1_desc.text = "Capacity Planning, Scalability Limits & Bottleneck Analysis on Google Online Boutique"
+p1_desc.font.size = Pt(18)
+p1_desc.font.color.rgb = RGBColor(203, 213, 225)
+p1_desc.space_after = Pt(28)
 
-p_meta = tf1.add_paragraph()
-p_meta.text = "Silvio Janneh  •  Academic Year 2025–2026"
-p_meta.font.size = Pt(14)
-p_meta.font.bold = True
-p_meta.font.color.rgb = RGBColor(226, 232, 240)
-p_meta.space_before = Pt(28)
+p1_meta = tf1.add_paragraph()
+p1_meta.text = "Author: Janneh Silvio  |  Telemetry: Jaeger, Prometheus, OpenTelemetry (Oct 8, 2026 Live Dataset)"
+p1_meta.font.size = Pt(13)
+p1_meta.font.color.rgb = ACCENT_CYAN
+
 
 # ==========================================
 # SLIDE 2: Executive Summary & Core Results
@@ -102,12 +113,11 @@ p_meta.space_before = Pt(28)
 slide2 = prs.slides.add_slide(blank_layout)
 add_header(slide2, "Executive Summary: Analytical Modeling vs. Trial-and-Error", "Project Overview")
 
-# 4 Stat Cards across the top
 stats = [
-    ("Sole Bottleneck", "Frontend Gateway", "80.0 ms CPU (43.2× imbalance)", HIGHLIGHT_AMBER),
-    ("Optimal Scaling", "c = 3 Replicas", "35.11 req/s at 93.6% USL eff.", HIGHLIGHT_GREEN),
-    ("Latency Shaved", "−78.5% Latency", "405.0 ms → 86.9 ms at 10 rps", ACCENT_BLUE),
-    ("Optimization ROI", "95.91% in Gateway", "25.0 ms/ms speedup leverage", PRIMARY),
+    ("Sole Bottleneck", "Frontend Gateway", "18.88 ms CPU (13.43× imbalance)", HIGHLIGHT_AMBER),
+    ("Optimal Scaling", "c = 3 Replicas", "148.75 req/s at 93.6% USL eff.", HIGHLIGHT_GREEN),
+    ("Capacity Ceiling", "52.97 req/s", "Single-pod saturation limit", ACCENT_BLUE),
+    ("Optimization ROI", "56.44% in Gateway", "1.52 ms/ms speedup leverage", PRIMARY),
 ]
 
 for i, (label, val, sub, col) in enumerate(stats):
@@ -125,7 +135,7 @@ for i, (label, val, sub, col) in enumerate(stats):
     
     p1 = tf.add_paragraph()
     p1.text = val
-    p1.font.size = Pt(18)
+    p1.font.size = Pt(17)
     p1.font.bold = True
     p1.font.color.rgb = col
     
@@ -134,7 +144,6 @@ for i, (label, val, sub, col) in enumerate(stats):
     p2.font.size = Pt(11)
     p2.font.color.rgb = SECONDARY
 
-# 2 Column Cards below
 left_card = add_card(slide2, Inches(0.8), Inches(3.2), Inches(5.75), Inches(3.7))
 tb_lc = slide2.shapes.add_textbox(Inches(1.0), Inches(3.4), Inches(5.35), Inches(3.3))
 tf_lc = tb_lc.text_frame
@@ -147,9 +156,9 @@ p_lc_h.font.bold = True
 p_lc_h.font.color.rgb = PRIMARY
 
 points_l = [
-    ("Cost & Cloud Footprint: ", "Running multi-hour cluster sweeps on Kubernetes consumes significant cloud billing and developer hours."),
-    ("Noise & Shared Tenancy: ", "Noisy-neighbor VM interference and transient network jitter obscure underlying architectural bottlenecks."),
-    ("Non-Predictive: ", "Physical load tests demonstrate what broke, but cannot evaluate arbitrary scaling topologies or pinpoint ROI instantaneously.")
+    ("Cost & Footprint: ", "Running multi-hour cluster sweeps consumes substantial cloud budget and developer hours."),
+    ("Noise & Shared Host Contention: ", "Container scheduling jitter and virtual network bridging mask fundamental architectural capacity."),
+    ("Non-Predictive: ", "Physical tests reveal failure points after the fact, but cannot evaluate arbitrary scaling topologies instantaneously.")
 ]
 for bold_prefix, text in points_l:
     p = tf_lc.add_paragraph()
@@ -178,7 +187,7 @@ p_rc_h.font.color.rgb = PRIMARY
 points_r = [
     ("Mathematical Foundations: ", "Combines Open Jackson Queueing Networks (M/M/1, M/M/c) and Layered Queueing Networks (LQN)."),
     ("Instantaneous Evaluation: ", "Evaluates end-to-end response times, queue lengths, and pod saturation bounds in sub-millisecond compute time."),
-    ("Precision Resource Allocation: ", "Proves mathematically where platform engineering effort yields 95.9% of user-perceived performance return.")
+    ("Precision Engineering ROI: ", "Identifies that 56.4% of system speedup ROI is concentrated in Frontend, with ProductCatalog (23.8%) secondary.")
 ]
 for bold_prefix, text in points_r:
     p = tf_rc.add_paragraph()
@@ -200,7 +209,6 @@ for bold_prefix, text in points_r:
 slide3 = prs.slides.add_slide(blank_layout)
 add_header(slide3, "System Topology & Empirical Telemetry Capture", "Google Online Boutique")
 
-# Left: Text card
 card3 = add_card(slide3, Inches(0.8), Inches(1.5), Inches(5.4), Inches(5.4))
 tb3 = slide3.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.0), Inches(5.0))
 tf3 = tb3.text_frame
@@ -213,11 +221,11 @@ p3_h.font.bold = True
 p3_h.font.color.rgb = PRIMARY
 
 points3 = [
-    ("Benchmark: ", "Google Online Boutique (11 polyglot microservices: Go, Node.js, C#, Python, Java, C Redis) deployed on Kubernetes."),
-    ("Workload Generation: ", "Locust load generator executing a realistic 30-minute e-commerce session workload at λ₀ = 5.0 req/s."),
-    ("Telemetry Archive: ", "17,200 spans captured across 1,247 traces (112 complete end-to-end traces; 1,135 partial/single-service spans)."),
+    ("Benchmark: ", "Google Online Boutique (11 polyglot microservices: Go, Node.js, C#, Python, Java, C Redis) deployed in containers."),
+    ("Workload Generation: ", "Locust load generator executing realistic user session transactions at target arrival rates."),
+    ("Authoritative Archive: ", "6,642 spans captured across 687 traces during the authoritative live test on October 8, 2026."),
     ("Instrumentation: ", "Jaeger distributed tracing + Prometheus counter snapshots for container metrics and traffic topology reconstruction."),
-    ("Parser Transparency: ", "8 microservices extracted directly from Jaeger spans; 3 estimated from code analysis due to gRPC naming differences.")
+    ("Empirical Coverage: ", "All 10 microservices measured directly from distributed traces; Redis state store parameterized at standard 2.0 ms baseline.")
 ]
 for bold_prefix, text in points3:
     p = tf3.add_paragraph()
@@ -232,7 +240,6 @@ for bold_prefix, text in points3:
     r2.font.size = Pt(12)
     r2.font.color.rgb = SECONDARY
 
-# Right: Image (Figure 1 Call Graph)
 fig1_path = os.path.abspath("results/figures/figure1_reconstructed_call_graph.png")
 if os.path.exists(fig1_path):
     slide3.shapes.add_picture(fig1_path, Inches(6.5), Inches(1.5), Inches(6.0), Inches(5.4))
@@ -244,29 +251,28 @@ if os.path.exists(fig1_path):
 slide4 = prs.slides.add_slide(blank_layout)
 add_header(slide4, "Analytical Modeling: Open Jackson QN & LQN Demarcation", "Mathematical Foundation")
 
-# Left: Explanation & Formulas
 card4 = add_card(slide4, Inches(0.8), Inches(1.5), Inches(5.4), Inches(5.4))
 tb4 = slide4.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.0), Inches(5.0))
 tf4 = tb4.text_frame
 tf4.word_wrap = True
 
 p4_h = tf4.paragraphs[0]
-p4_h.text = "The LQN Demand Demarcation Breakthrough"
+p4_h.text = "The LQN Demand Demarcation Principle"
 p4_h.font.size = Pt(16)
 p4_h.font.bold = True
 p4_h.font.color.rgb = PRIMARY
 
 p_lqn_exp = tf4.add_paragraph()
-p_lqn_exp.text = "Standard Open Jackson QNs assume pure server execution. In microservices, the Gateway blocks synchronously waiting on downstream child RPCs."
+p_lqn_exp.text = "Classical Jackson QNs assume pure server execution. In microservices, upstream gateways block synchronously awaiting downstream gRPC calls."
 p_lqn_exp.font.size = Pt(12)
 p_lqn_exp.font.color.rgb = SECONDARY
 p_lqn_exp.space_before = Pt(6)
 
 points4 = [
-    ("LQN Demarcation Formula: ", "S₀ = R₀_gross − Σ (V₀,j · R_child,j)\nFrontend 285.0 ms gross − 205.0 ms child wait = 80.00 ms pure CPU."),
-    ("Traffic Balance Inversion: ", "λ = (I − Pᵀ)⁻¹ · λ_ext\nSolves internal microservice invocation rates from the transition routing matrix P."),
+    ("LQN Demarcation Formula: ", "S_i = R_gross − Σ (V_i,j · R_child,j)\nIsolates pure in-process CPU computation (Frontend S₀ = 18.88 ms) from child wait time."),
+    ("Traffic Inversion: ", "λ = (I − Pᵀ)⁻¹ · λ_ext\nSolves internal microservice visit ratios from transition probability matrix P."),
     ("M/M/1 Residence Time: ", "R_i = S_i / (1 − ρ_i), where ρ_i = λ_i · S_i\nCaptures non-linear queueing explosion as server utilisation approaches 1.0."),
-    ("Total System Latency: ", "R_sys = Σ (V_i · R_i) = 405.02 ms at nominal λ₀ = 10 req/s.")
+    ("Analytical System Response: ", "R_sys = Σ (V_i · R_i) = 23.27 ms (uncontended theoretical floor at λ₀ = 10 req/s).")
 ]
 for bold_prefix, text in points4:
     p = tf4.add_paragraph()
@@ -281,7 +287,6 @@ for bold_prefix, text in points4:
     r2.font.size = Pt(12)
     r2.font.color.rgb = SECONDARY
 
-# Right: Figure 2 (LQN Architecture)
 fig2_path = os.path.abspath("results/figures/figure2_lqn_three_tier_architecture.png")
 if os.path.exists(fig2_path):
     slide4.shapes.add_picture(fig2_path, Inches(6.5), Inches(1.5), Inches(6.0), Inches(5.4))
@@ -293,7 +298,6 @@ if os.path.exists(fig2_path):
 slide5 = prs.slides.add_slide(blank_layout)
 add_header(slide5, "Empirical Parameterization: All 11 Microservices", "Model Parameters")
 
-# Table for 11 services
 rows, cols = 12, 6
 left, top, width, height = Inches(0.8), Inches(1.5), Inches(11.73), Inches(5.3)
 table_shape = slide5.shapes.add_table(rows, cols, left, top, width, height)
@@ -315,17 +319,17 @@ for j, h in enumerate(headers):
         p.font.color.rgb = RGBColor(255, 255, 255)
 
 table_data = [
-    ("Frontend (Gateway)", "Go", "1.0000", "80.00 ms", "80.00 ms", "Jaeger (raw ingress) + LQN demarcation (80.0 ms)"),
-    ("ProductCatalogService", "Go", "0.3692", "5.00 ms", "1.85 ms", "Jaeger spans (1,850 samples)"),
-    ("CurrencyService", "Node.js", "0.1852", "3.00 ms", "0.56 ms", "Jaeger spans (1,240 samples)"),
-    ("CartService", "C#", "0.1352", "4.00 ms", "0.54 ms", "Estimated (gRPC span-name mismatch; Redis sub.)"),
-    ("RecommendationService", "Python", "0.0800", "7.50 ms", "0.60 ms", "Jaeger spans (1,080 samples)"),
-    ("AdService", "Java", "0.0500", "5.81 ms", "0.29 ms", "Estimated (gRPC span-name mismatch)"),
-    ("CheckoutService", "Go", "0.0400", "14.50 ms", "0.58 ms", "Jaeger spans (1,420 samples)"),
-    ("ShippingService", "Go", "0.0452", "3.80 ms", "0.17 ms", "Estimated (gRPC span-name mismatch)"),
-    ("PaymentService", "Node.js", "0.0072", "9.50 ms", "0.07 ms", "Jaeger spans (1,110 samples)"),
-    ("EmailService", "Python", "0.0052", "11.50 ms", "0.06 ms", "Jaeger spans (1,040 samples)"),
-    ("Redis State Store", "C", "0.1284", "2.00 ms", "0.26 ms", "Jaeger spans (1,300 samples)"),
+    ("Frontend (Gateway)", "Go", "1.0000", "18.88 ms", "18.88 ms", "Jaeger live traces (2,386 samples, BOTTLENECK)"),
+    ("CartService", "C#", "0.0399", "35.23 ms", "1.41 ms", "Jaeger live traces (221 samples)"),
+    ("CheckoutService", "Go", "0.0367", "33.52 ms", "1.23 ms", "Jaeger live traces (992 samples)"),
+    ("CurrencyService", "Node.js", "0.2771", "1.60 ms", "0.44 ms", "Jaeger live traces (564 samples)"),
+    ("AdService", "Java", "0.0218", "19.88 ms", "0.43 ms", "Jaeger live traces (79 samples)"),
+    ("RecommendationService", "Python", "0.0898", "3.83 ms", "0.34 ms", "Jaeger live traces (404 samples)"),
+    ("PaymentService", "Node.js", "0.0051", "47.94 ms", "0.24 ms", "Jaeger live traces (96 samples)"),
+    ("ProductCatalogService", "Go", "0.6369", "0.32 ms", "0.21 ms", "Jaeger live traces (1,574 samples)"),
+    ("ShippingService", "Go", "0.0142", "13.45 ms", "0.19 ms", "Jaeger live traces (131 samples)"),
+    ("Redis State Store", "C", "0.0379", "2.00 ms", "0.08 ms", "Operational baseline (CartService cache target)"),
+    ("EmailService", "Python", "0.0051", "1.29 ms", "0.01 ms", "Jaeger live traces (95 samples)"),
 ]
 
 for i, row in enumerate(table_data):
@@ -333,16 +337,13 @@ for i, row in enumerate(table_data):
         cell = tbl.cell(i + 1, j)
         cell.text = val
         cell.fill.solid()
-        if i % 2 == 0:
-            cell.fill.fore_color.rgb = RGBColor(241, 245, 249)
-        else:
-            cell.fill.fore_color.rgb = RGBColor(255, 255, 255)
+        cell.fill.fore_color.rgb = RGBColor(241, 245, 249) if i % 2 == 0 else RGBColor(255, 255, 255)
         for p in cell.text_frame.paragraphs:
             p.font.size = Pt(10)
             if j == 0 and "Frontend" in val:
                 p.font.bold = True
                 p.font.color.rgb = HIGHLIGHT_AMBER
-            elif j == 3 and "80.00" in val:
+            elif j == 3 and "18.88" in val:
                 p.font.bold = True
                 p.font.color.rgb = PRIMARY
             else:
@@ -353,7 +354,7 @@ for i, row in enumerate(table_data):
 # SLIDE 6: Bottleneck Identification
 # ==========================================
 slide6 = prs.slides.add_slide(blank_layout)
-add_header(slide6, "Bottleneck Identification: The 43.2× Demand Imbalance", "System Analysis")
+add_header(slide6, "Bottleneck Identification: The 13.43× Demand Imbalance", "System Analysis")
 
 card6 = add_card(slide6, Inches(0.8), Inches(1.5), Inches(5.4), Inches(5.4))
 tb6 = slide6.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.0), Inches(5.0))
@@ -367,10 +368,10 @@ p6_h.font.bold = True
 p6_h.font.color.rgb = PRIMARY
 
 points6 = [
-    ("Bottleneck Law: ", "λ_sat = 1 / max_i(D_i) = 1 / 0.080 s = 12.50 req/s.\nA single pod cannot exceed 12.50 req/s regardless of backend capacity."),
-    ("43.2× Demand Divergence: ", "Frontend CPU demand is 80.00 ms; second-heaviest is ProductCatalog at 1.85 ms."),
-    ("CPU Utilization Divergence: ", "At nominal λ₀ = 10 req/s:\n• Frontend CPU = 80.00% (approaching saturation)\n• ProductCatalog CPU = 1.85%\n• All other backends operate at < 0.60% CPU."),
-    ("Platform Engineering Insight: ", "Backend microservices are vastly over-provisioned idle passengers. Tuning backend microservices yields zero system-level gain.")
+    ("Bottleneck Law: ", "λ_sat = 1 / max_i(D_i) = 1 / 0.01888 s = 52.97 req/s.\nA single pod cannot exceed 52.97 req/s regardless of backend sizing."),
+    ("13.43× Demand Divergence: ", "Frontend CPU demand is 18.88 ms; second-heaviest service is CartService at 1.41 ms."),
+    ("CPU Utilization at Nominal 10 req/s: ", "• Frontend CPU = 18.88%\n• CartService CPU = 1.41%\n• All other 9 backends operate at < 0.50% CPU."),
+    ("Platform Engineering Insight: ", "Backend microservices have negligible CPU saturation. Tuning backend services yields negligible system gain until Frontend is horizontally scaled.")
 ]
 for bold_prefix, text in points6:
     p = tf6.add_paragraph()
@@ -394,7 +395,7 @@ if os.path.exists(fig3_path):
 # SLIDE 7: Model Validation & Error Analysis
 # ==========================================
 slide7 = prs.slides.add_slide(blank_layout)
-add_header(slide7, "Model Validation: Empirical Comparison & Error Analysis", "Empirical Validation")
+add_header(slide7, "Model Validation: Multi-Tier Comparison & Honest Error Analysis", "Empirical Validation")
 
 card7 = add_card(slide7, Inches(0.8), Inches(1.5), Inches(5.4), Inches(5.4))
 tb7 = slide7.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.0), Inches(5.0))
@@ -402,16 +403,16 @@ tf7 = tb7.text_frame
 tf7.word_wrap = True
 
 p7_h = tf7.paragraphs[0]
-p7_h.text = "Rigorous, Transparent Validation"
+p7_h.text = "Rigorous Multi-Tier Validation"
 p7_h.font.size = Pt(16)
 p7_h.font.bold = True
 p7_h.font.color.rgb = PRIMARY
 
 points7 = [
-    ("Empirical Benchmark Tier: ", "λ₀ = 5.0 req/s measured in cluster (empirical_measurements.csv). Observed response: 285.0 ms."),
-    ("Analytical Prediction: ", "Model predicts 138.33 ms at λ₀ = 5.0 req/s. Single-tier APE = 51.47%."),
-    ("Physical Source of Residual: ", "The 146.67 ms gap reflects unmodeled physical phenomena: container virtualization (TLS handshakes, cgroup runtime), synchronous child RPC blocking, and network transit delays."),
-    ("Academic Honesty: ", "Multi-tier metrics (WMAPE, R²) cannot be legitimately computed from a single tier. The report transparently reports APE = 51.47% without synthetic inflation.")
+    ("4 Empirical Tiers Tested: ", "Evaluated at λ ∈ {2.0, 5.0, 8.0, 10.0} req/s in Docker Desktop cluster under live Locust load."),
+    ("Validation Metrics: ", "Weighted Mean Absolute Percentage Error (WMAPE) = 82.81%, R² = −0.986 across the 4 workload tiers."),
+    ("Physical Source of Divergence: ", "Single-host Docker Desktop resource contention (WSL2 scheduling jitter, NAT bridging, 16 co-located containers) saturates near 5 req/s."),
+    ("Academic Honesty: ", "Unlike simulated reports claiming 98% accuracy, we transparently publish the gap between uncontended queueing theory and shared-host virtualization limits.")
 ]
 for bold_prefix, text in points7:
     p = tf7.add_paragraph()
@@ -449,11 +450,11 @@ p8_h.font.bold = True
 p8_h.font.color.rgb = PRIMARY
 
 points8 = [
-    ("Traffic Load Sweep: ", "Swept arrival rates from λ₀ = 1.0 to 12.0 req/s across all 11 microservices."),
-    ("Healthy Tier (1–7 req/s): ", "Response times remain stable (91.9 ms to 186.8 ms) as Frontend CPU stays below 56%."),
-    ("Nominal Threshold (10 req/s): ", "Frontend CPU reaches 80.0%, latency reaches 405.02 ms."),
-    ("500 ms SLA Breach Point: ", "Strict mathematical threshold at λ₀ = 10.48 req/s where latency exceeds SLA."),
-    ("Asymptotic Saturation: ", "At 12.0 req/s (96% CPU), latency explodes to 2,005 ms, leading to pod collapse.")
+    ("Arrival Rate Sweep: ", "Evaluated theoretical throughput curve from λ₀ = 0 to 52.97 req/s for a single Frontend pod."),
+    ("Uncontended Region (0–20 req/s): ", "Response times remain sub-35 ms, with Frontend CPU under 38%."),
+    ("Nominal Baseline (10 req/s): ", "Frontend CPU = 18.88%, theoretical uncontended latency R = 23.27 ms."),
+    ("500 ms SLA Breach Boundary: ", "Uncontended M/M/1 model reaches 500 ms SLA boundary above 50 req/s as ρ → 1.0."),
+    ("Single-Pod Asymptotic Ceiling: ", "Hard physical limit at λ_sat = 52.97 req/s; requires multi-pod replication for higher throughput.")
 ]
 for bold_prefix, text in points8:
     p = tf8.add_paragraph()
@@ -491,10 +492,10 @@ p9_h.font.bold = True
 p9_h.font.color.rgb = PRIMARY
 
 points9 = [
-    ("Erlang-C Multi-Server Model: ", "At λ₀ = 10 req/s, deploying c = 3 Frontend pods reduces queueing delay: C(3, 0.800) = 5.2%."),
-    ("Massive Latency Reduction: ", "Frontend residence drops from 400.0 ms to 81.89 ms (−79.5%), bringing end-to-end system latency to 86.9 ms."),
-    ("Gunther's USL Model: ", "Evaluates scalability with contention σ = 0.0248 and coherency κ = 0.0031:\n• c = 3 capacity = 35.11 req/s (2.81× capacity)\n• Scaling efficiency = 93.6%."),
-    ("Diminishing Returns: ", "Beyond c = 3, marginal gain is minimal (c=6 yields only 84.9 ms latency at 82.2% efficiency).")
+    ("Erlang-C Multi-Server Model: ", "At λ₀ = 10 req/s, deploying c = 3 Frontend pods reduces queueing probability to C(3, 0.1888) = 0.11%."),
+    ("Residence Time Near Physical Floor: ", "Frontend residence drops to 18.89 ms at c = 3, virtually eliminating queue wait times."),
+    ("Gunther's USL Capacity Model: ", "With contention σ = 0.0248 and coherency κ = 0.0031:\n• c = 3 capacity = 148.75 req/s (2.81× capacity expansion)\n• Scaling efficiency = 93.6%."),
+    ("Diminishing Marginal Gains: ", "Beyond c = 3, USL efficiency degrades (c = 6 yields 82.2% efficiency with minimal additional latency improvement).")
 ]
 for bold_prefix, text in points9:
     p = tf9.add_paragraph()
@@ -532,10 +533,10 @@ p10_h.font.bold = True
 p10_h.font.color.rgb = PRIMARY
 
 points10 = [
-    ("Sensitivity Derivative: ", "∂R_sys / ∂S_i = V_i / (1 − ρ_i)²\nMeasures system latency reduction per 1 ms shaved from service demand S_i."),
-    ("Frontend Leverage = 25.000 ms/ms: ", "At ρ₀ = 0.80, reducing Frontend demand by 1 ms cuts user latency by 25.00 ms (shaving 20 ms cuts latency by 250 ms!)."),
-    ("95.91% Total ROI Concentration: ", "Frontend accounts for 25.000 / 26.066 = 95.91% of all system performance leverage."),
-    ("Negligible Backend Impact: ", "All 10 backend microservices combined represent only 4.09% of optimization ROI.")
+    ("Sensitivity Derivative: ", "∂R_sys / ∂S_i = V_i / (1 − ρ_i)²\nQuantifies end-to-end latency eliminated per 1 ms saved in service demand S_i."),
+    ("Frontend Primary Leverage: ", "∂R/∂S₀ = 1.5197 ms/ms. Frontend captures 56.44% of all system performance optimization leverage."),
+    ("Substantial Secondary Leverage: ", "ProductCatalogService (V = 0.637) captures 23.76% of ROI; CurrencyService captures 10.39%."),
+    ("Targeted Engineering Focus: ", "Top 3 services account for over 90% of optimization impact; remaining 8 microservices combine for < 10% ROI.")
 ]
 for bold_prefix, text in points10:
     p = tf10.add_paragraph()
@@ -562,12 +563,12 @@ slide11 = prs.slides.add_slide(blank_layout)
 add_header(slide11, "Sources of Error, Assumptions & Honest Limitations", "Methodological Rigor")
 
 items11 = [
-    ("1. Single Empirical Validation Tier", "Only λ₀ = 5.0 req/s is empirically measured. While sufficient for bottleneck identification and directional scaling, multi-tier metrics (WMAPE, R²) cannot be computed."),
-    ("2. Trace Completeness (9% Subset)", "112 of 1,247 traces (9.0%) were complete end-to-end traces; 1,135 were partial. Routing probabilities and child-RPC blocking baselines are derived from this 9% subset."),
-    ("3. Three Estimated Service Times", "CartService, AdService, and ShippingService were estimated due to gRPC span-naming mismatch. Sensitivity analysis proves ±20% perturbation impacts system latency by < 0.25%."),
-    ("4. Sub-Exponential Variability (CoV < 1.0)", "Observed CoV is 0.27–0.36. M/M/1 assumes CoV = 1.0 and acts as an analytical upper bound on queueing delay."),
-    ("5. Prometheus vs. cAdvisor Divergence", "cAdvisor 30-min average (58%) vs. Prometheus 15s rate (2.58%) reflects sampling window semantics; cAdvisor is the correct steady-state input."),
-    ("6. Measurement Statistical Confidence", "For empirical services with n ≥ 1,040, standard error is SE < 0.10 ms, confirming high measurement precision relative to service demands.")
+    ("1. Shared Host Docker Contention", "16 containers sharing one WSL2 VM and network bridge causes high tail inflation (WMAPE = 82.81%), contrasting with uncontended cloud execution."),
+    ("2. High Empirical Variance (CoV > 2.0)", "Services exhibit high coefficient of variation (Frontend CoV = 19.05, ProductCatalog = 29.44) due to scheduling jitter; M/M/1 acts as analytical baseline."),
+    ("3. Telemetry Truncation Artifacts", "At λ = 8.0 req/s, success rate dropped to 74.2%, causing slower requests to time out and truncating the observed mean latency."),
+    ("4. Synchronous RPC Call Trees", "Gateway goroutines block waiting for child gRPC calls; LQN demarcation separates pure CPU computation from child wait times."),
+    ("5. Redis State Store Defaulting", "Redis Cart cache operates at default 2.0 ms baseline; accounted for via visit ratio routing from CartService (0.95 probability)."),
+    ("6. Measurement Statistical Confidence", "Authoritative run captures 6,642 spans across 687 traces, providing statistically robust empirical service distributions.")
 ]
 
 for idx, (title, desc) in enumerate(items11):
@@ -601,11 +602,11 @@ slide12 = prs.slides.add_slide(blank_layout)
 add_header(slide12, "Actionable Platform Engineering Recommendations", "Production Implementation")
 
 recs = [
-    ("1. Optimize Frontend Template Rendering & Caching", "ROI: 95.91%", "Shaving 20 ms off Frontend execution expands single-pod saturation capacity from 12.5 to 16.7 req/s (+33.3%) and cuts user latency by 250 ms at nominal load."),
-    ("2. Provision Frontend at Exactly c = 3 Pod Replicas", "Sweet Spot", "Delivers 2.81× capacity expansion (35.11 req/s) and drops system latency from 405.0 ms to 86.9 ms (−78.5%) at 93.6% USL efficiency."),
-    ("3. Configure Kubernetes HPA Target at 60–65% CPU", "HPA Policy", "Because M/M/1 response times explode non-linearly as ρ → 1.0, triggering horizontal scaling at 65% prevents cascading queue pileup before the SLA knee."),
-    ("4. Add Prometheus P95/P99 Latency Alerting", "Observability", "Tail latency amplification occurs before average CPU spikes. Early percentile alerts ensure proactive mitigation under heavy ingress load."),
-    ("5. Enforce Standardized OpenTelemetry Context Propagation", "Standards", "Eliminate trace sampling gaps and non-standard gRPC span names to maintain 100% telemetry coverage across polyglot microservice runtimes.")
+    ("1. Horizontally Scale Frontend to c = 3 Replicas", "Sweet Spot", "Expands capacity from 52.97 to 148.75 req/s (2.81× expansion) at 93.6% USL efficiency, driving queueing delay under 0.11%."),
+    ("2. Optimize High-ROI Services (Frontend, Catalog, Currency)", "ROI: 90.6%", "Concentrate software profiling on Frontend (56.4% ROI), ProductCatalog (23.8%), and Currency (10.4%) to eliminate cascading latency."),
+    ("3. Configure Kubernetes HPA Target at ρ* = 66.7% CPU", "HPA Policy", "Set target CPU utilization to 66.7% (scale-up trigger at 8.33 req/s/replica) to prevent queue explosion before the 500 ms SLA threshold."),
+    ("4. Add Percentile-Based Latency Alerting (P95/P99)", "Observability", "Tail latency amplification occurs before average CPU spikes; early P95 alerting prevents cascading connection timeouts."),
+    ("5. Isolate High-Traffic Workloads in Dedicated Node Pools", "Platform", "Prevent shared-host CPU and network contention by separating gateway and storage tiers from compute-heavy ML backends.")
 ]
 
 for idx, (title, badge, desc) in enumerate(recs):
@@ -663,7 +664,7 @@ p13_h.space_before = Pt(12)
 p13_h.space_after = Pt(14)
 
 p13_body = tf13.add_paragraph()
-p13_body.text = "• Jackson QN and LQN models provide instantaneous capacity forecasts that physical tests cannot match.\n• Telemetry demarcation isolates genuine CPU bottlenecks from synchronous child-RPC blocking.\n• Sensitivity analysis guarantees that developer effort is concentrated where 95.9% of user value is realized.\n• Combining analytical queueing with empirical observability forms a complete, predictive SPE practice."
+p13_body.text = "• Jackson QN and LQN models provide instantaneous capacity forecasts that physical tests cannot match.\n• Telemetry demarcation isolates genuine CPU bottlenecks from synchronous child-RPC blocking.\n• Sensitivity analysis guarantees that developer effort is concentrated where 56.4% of user value is realized.\n• Combining analytical queueing with empirical observability forms a complete, predictive SPE practice."
 p13_body.font.size = Pt(15)
 p13_body.font.color.rgb = RGBColor(203, 213, 225)
 
