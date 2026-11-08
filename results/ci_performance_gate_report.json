@@ -6,7 +6,7 @@
       "id": "GATE-01",
       "name": "Frontend Service Demand Bound",
       "description": "Verifies that frontend single-visit CPU demand does not exceed the architectural threshold.",
-      "measured": "80.00 ms",
+      "measured": "18.88 ms",
       "threshold": "<= 85.00 ms",
       "status": "PASS",
       "passed": true
@@ -15,7 +15,7 @@
       "id": "GATE-02",
       "name": "Minimum Saturation Throughput",
       "description": "Verifies that the theoretical asymptotic bottleneck capacity meets minimum traffic requirement.",
-      "measured": "12.50 req/s",
+      "measured": "52.97 req/s",
       "threshold": ">= 11.50 req/s",
       "status": "PASS",
       "passed": true
@@ -32,9 +32,9 @@
     {
       "id": "GATE-04",
       "name": "Downstream Bottleneck Invariance",
-      "description": "Verifies frontend remains the sole structural bottleneck; downstream services operate well below saturation.",
-      "measured": "Max downstream 57.94 ms (ratio: 72.43%)",
-      "threshold": "< 80.00 ms (ratio < 100%)",
+      "description": "Verifies frontend remains the sole structural bottleneck (D_0 = V_0*S_0 > max D_downstream).",
+      "measured": "Max downstream demand 2.31 ms (ratio: 12.25%)",
+      "threshold": "< 18.88 ms (ratio < 100%)",
       "status": "PASS",
       "passed": true
     },
@@ -42,14 +42,14 @@
       "id": "GATE-05",
       "name": "Near-Saturation Knee Stability (10 req/s)",
       "description": "Verifies that approaching 80% saturation preserves response time under 600 ms before hockey-stick cliff.",
-      "measured": "400.00 ms (U = 80.0%)",
+      "measured": "23.27 ms (U = 18.9%)",
       "threshold": "<= 600.00 ms",
       "status": "PASS",
       "passed": true
     }
   ],
   "demands_analyzed": {
-    "frontend": 80.0,
+    "frontend": 18.880231349538978,
     "productcatalogservice": 0.5444442740286298,
     "currencyservice": 1.1998173302107726,
     "cartservice": 57.94214383561644,

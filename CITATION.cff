@@ -5,8 +5,8 @@ authors:
     given-names: "Silvio"
     affiliation: "Software Performance Engineering (SPE) Course 2025–2026"
 title: "Analytical QN & LQN Performance Model of a Polyglot Microservice Application"
-version: 2.6.0
-date-released: 2026-10-08
+version: 2.7.0
+date-released: 2026-11-08
 repository-code: "https://github.com/Silvio777-hub/Analytical-QN-LQN-Model-of-a-Microservice-Application"
 keywords:
   - "queueing-networks"

@@ -39,4 +39,4 @@ jobs:
 
       - name: Run Master Cross-Consistency Audit
         run: |
-          python scripts/audit_report.py
+          python scripts/full_docx_audit.py

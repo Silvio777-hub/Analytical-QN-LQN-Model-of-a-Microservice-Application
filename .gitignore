@@ -17,3 +17,10 @@ scripts/deep_dive_results.json
 scripts/test_eq.docx
 SPEFinal_pre_*.docx
 ~$*.docx
+FROZEN_NUMBERS.md
+scratch_docx_dump.txt
+scripts/check_provenance.py
+scripts/audit_probe.py
+scripts/audit_deep_dive.py
+scripts/inspect_*.py
+scripts/test_*.py

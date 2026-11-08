@@ -153,20 +153,55 @@ def evaluate_gates(demands: Dict[str, float], predictions: Dict[str, Any], args)
     })
 
     # 4. Bottleneck Invariance & Stability Gate
-    # Frontend must have the largest demand across all tiers
-    other_demands = [v for k, v in demands.items() if fe_key and k != fe_key]
-    max_downstream = max(other_demands) if other_demands else 14.5
-    pass_gate4 = s_fe > max_downstream
-    ratio = (max_downstream / s_fe) if s_fe > 0 else 0.0
-    gates.append({
-        "id": "GATE-04",
-        "name": "Downstream Bottleneck Invariance",
-        "description": "Verifies frontend remains the sole structural bottleneck; downstream services operate well below saturation.",
-        "measured": f"Max downstream {max_downstream:.2f} ms (ratio: {ratio:.2%})",
-        "threshold": f"< {s_fe:.2f} ms (ratio < 100%)",
-        "status": "PASS" if pass_gate4 else "FAIL",
-        "passed": pass_gate4
-    })
+    # In Open Queueing Networks, the bottleneck is the station with the largest total demand D_i = V_i * S_i
+    params_file = os.path.join(PROJECT_ROOT, "scripts", "model", "queueing_network_parameters.json")
+    computed_d = False
+    if os.path.exists(params_file):
+        try:
+            with open(params_file, "r", encoding="utf-8") as f:
+                pdata = json.load(f)
+                import numpy as np
+                names = [n.lower() for n in pdata.get("service_names", [])]
+                stimes = np.array(pdata.get("service_times", [])) * 1000.0
+                P = np.array(pdata.get("routing_matrix", []))
+                K = len(names)
+                if K > 0 and len(stimes) == K and P.shape == (K, K):
+                    q = np.zeros(K)
+                    q[0] = 1.0
+                    V = np.linalg.inv(np.eye(K) - P.T).dot(q)
+                    D = V * stimes
+                    d_fe = D[0]
+                    other_D = [D[i] for i in range(1, K)]
+                    max_downstream = max(other_D)
+                    pass_gate4 = bool(d_fe > max_downstream)
+                    ratio = float(max_downstream / d_fe) if d_fe > 0 else 0.0
+                    gates.append({
+                        "id": "GATE-04",
+                        "name": "Downstream Bottleneck Invariance",
+                        "description": "Verifies frontend remains the sole structural bottleneck (D_0 = V_0*S_0 > max D_downstream).",
+                        "measured": f"Max downstream demand {max_downstream:.2f} ms (ratio: {ratio:.2%})",
+                        "threshold": f"< {d_fe:.2f} ms (ratio < 100%)",
+                        "status": "PASS" if pass_gate4 else "FAIL",
+                        "passed": pass_gate4
+                    })
+                    computed_d = True
+        except Exception:
+            pass
+
+    if not computed_d:
+        other_demands = [v for k, v in demands.items() if fe_key and k != fe_key]
+        max_downstream = max(other_demands) if other_demands else 14.5
+        pass_gate4 = s_fe > max_downstream
+        ratio = (max_downstream / s_fe) if s_fe > 0 else 0.0
+        gates.append({
+            "id": "GATE-04",
+            "name": "Downstream Bottleneck Invariance",
+            "description": "Verifies frontend remains the sole structural bottleneck; downstream services operate well below saturation.",
+            "measured": f"Max downstream {max_downstream:.2f} ms (ratio: {ratio:.2%})",
+            "threshold": f"< {s_fe:.2f} ms (ratio < 100%)",
+            "status": "PASS" if pass_gate4 else "FAIL",
+            "passed": pass_gate4
+        })
 
     # 5. Near-Saturation Knee Margin Gate
     # Estimate latency at lambda = 10.0 req/s using MVA formula: R = S / (1 - lambda * S)

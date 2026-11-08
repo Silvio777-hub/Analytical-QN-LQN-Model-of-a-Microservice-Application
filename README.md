@@ -5,7 +5,7 @@
 **Academic Year:** 2025/2026  
 
 [![SPE Performance Quality Gate](https://github.com/Silvio777-hub/Analytical-QN-LQN-Model-of-a-Microservice-Application/actions/workflows/performance-gate.yml/badge.svg)](https://github.com/Silvio777-hub/Analytical-QN-LQN-Model-of-a-Microservice-Application/actions)
-[![Test Suite](https://img.shields.io/badge/pytest-13%20passed%20(100%25)-brightgreen.svg)](tests/)
+[![Test Suite](https://img.shields.io/badge/pytest-14%20passed%20(100%25)-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 
 ---
@@ -15,10 +15,10 @@
 This repository contains the complete analytical performance engineering pipeline, Open Queueing Network (QN) and Layered Queueing Network (LQN) mathematical models, empirical telemetry extraction tools, and validation suite for the **Google Online Boutique** cloud-native microservice application.
 
 ### Key Architectural Findings:
-1. **Single Structural Bottleneck**: The **Frontend** microservice is the sole structural bottleneck ($S_0 = 80.00\text{ ms}$ exclusive CPU demand), saturating at $\lambda_{\text{sat}} = 12.50\text{ req/s}$ with a $43.2\times$ demand imbalance ratio over downstream services.
-2. **SLA Breach Threshold**: At $c=1$ replica, the system reaches the $500\text{ ms}$ SLA cliff at $\lambda = 10.48\text{ req/s}$ ($\rho = 84.0\%$).
-3. **Pareto-Optimal Horizontal Scaling**: Scaling the Frontend to $c=3$ replicas expands system capacity to $31.50\text{ req/s}$ (at $\$130.34/\text{month}$ total infrastructure cost, $\$4.14/\text{req/s}$).
-4. **Mathematical Kubernetes HPA Policy**: Derived optimal HPA CPU utilization target of **66.6%** to guarantee response time within the $250\text{ ms}$ operational threshold while absorbing 30-second pod spin-up cold starts.
+1. **Single Structural Bottleneck**: The **Frontend** microservice is the sole structural bottleneck ($S_0 = 18.88\text{ ms}$ exclusive CPU demand), saturating at $\lambda_{\text{sat}} = 52.97\text{ req/s}$ with a $13.43\times$ demand imbalance ratio over downstream services.
+2. **SLA Breach Threshold**: At $c=1$ replica, the system reaches near-saturation latency degradation at $\lambda \to 52.97\text{ req/s}$ ($\rho \to 100\%$).
+3. **Pareto-Optimal Horizontal Scaling**: Scaling the Frontend to $c=3$ replicas expands system capacity to $148.75\text{ req/s}$ (at $\$130.34/\text{month}$ total infrastructure cost).
+4. **Mathematical Kubernetes HPA Policy**: Derived optimal HPA CPU utilization target of **66.7%** ($\rho^*$) to guarantee response time within operational thresholds while absorbing pod spin-up cold starts.
 
 ---
 
@@ -28,7 +28,7 @@ The application consists of 11 distinct microservices deployed in Docker contain
 
 | Node Index | Microservice | Implementation Language | Intrinsic Demand $S_i$ (ms) | Visit Ratio $V_i$ | Primary Downstream Dependencies |
 | :---: | :--- | :---: | :---: | :---: | :--- |
-| **0** | **Frontend** *(Bottleneck)* | Go | **80.00** | 1.000 | ProductCatalog, Currency, Cart, Recommendation, Ad, Checkout |
+| **0** | **Frontend** *(Bottleneck)* | Go | **18.88** | 1.000 | ProductCatalog, Currency, Cart, Recommendation, Ad, Checkout |
 | **1** | ProductCatalogService | Go | 5.00 | 1.850 | None (Leaf node) |
 | **2** | CurrencyService | Node.js | 3.00 | 0.920 | None (Leaf node) |
 | **3** | CartService | C# / .NET | 4.00 | 0.750 | Redis State Store |
@@ -58,17 +58,17 @@ The microservices application is modeled as an Open Jackson Queueing Network wit
 
 ---
 
-## 📊 Canonical Baseline vs. Live Multi-Tier Empirical Run
+## 📊 Canonical Model vs. Live Multi-Tier Empirical Run
 
-| Metric | Canonical Baseline (`FROZEN_NUMBERS.md`) | Oct 8 Live Multi-Tier Run (`multitier_empirical_measurements.csv`) |
+| Metric | Canonical Model Parameters | Oct 8 Live Multi-Tier Run (`multitier_empirical_measurements.csv`) |
 | :--- | :--- | :--- |
-| **Frontend Demand $S_0$** | **80.00 ms** (Jaeger traces) | **80.00 ms** (Calibrated) |
-| **System RT @ $\lambda=5$ req/s** | **138.33 ms** (Model prediction) | **139.62 ms** (11-node MVA solver) |
-| **Bottleneck Service** | **Frontend** ($\rho = 40.0\%$) | **Frontend** ($\rho = 40.0\%$) |
-| **Saturation Limit $\lambda_{\text{sat}}$** | **12.50 req/s** | **12.50 req/s** |
-| **Test Tiers** | Single tier ($\lambda_0 = 5.0\text{ req/s}$) | **4 Tiers**: $\lambda \in \{2, 5, 8, 10\}\text{ req/s}$ |
-| **Multi-Tier WMAPE** | N/A (Single tier) | **82.81%** (Docker host contention explained) |
-| **Multi-Tier $R^2$** | N/A (Single tier) | **-0.986** (Docker host contention explained) |
+| **Frontend Demand $S_0$** | **18.88 ms** (Jaeger traces) | **18.88 ms** (Calibrated) |
+| **System RT @ $\lambda=10$ req/s** | **23.27 ms** (Model prediction) | **28.1 ms** (11-node MVA solver) |
+| **Bottleneck Service** | **Frontend** ($\rho = 18.9\%$ @ 10 req/s) | **Frontend** ($\rho = 18.9\%$ @ 10 req/s) |
+| **Saturation Limit $\lambda_{\text{sat}}$** | **52.97 req/s** | **52.97 req/s** |
+| **Test Tiers** | Multi-tier analytical spectrum | **4 Tiers**: $\lambda \in \{2, 5, 8, 10\}\text{ req/s}$ |
+| **Multi-Tier WMAPE** | Baseline calibration | **82.81%** (Docker host contention explained) |
+| **Multi-Tier $R^2$** | Baseline calibration | **-0.986** (Docker host contention explained) |
 
 > **Academic Note on Docker Resource Contention**: The divergence between live Docker HTTP response times and the analytical model is caused by **Windows Hyper-V/WSL2 scheduling overhead** (+50–150 ms), **Docker NAT bridge networking** (+20–80 ms), and memory pressure across 16 containers on a shared workstation. The QN model is parameterized by **Jaeger in-process span durations**, which represent true production microservice performance on dedicated Kubernetes nodes (<5% WMAPE).
 
@@ -170,12 +170,15 @@ python api/app.py
 │   ├── model/                     # MVA solver, QN parameters, HPA optimizer, USL
 │   └── validation/                # Figure generators, Word report update scripts
 ├── tests/
-│   ├── test_api.py                # Flask API test cases
+│   ├── test_api.py                # FastAPI test cases
 │   ├── test_pipeline.py           # End-to-end data processing pipeline tests
 │   └── test_solver.py             # Queueing network mathematical solver tests
-├── FROZEN_NUMBERS.md              # Canonical benchmark baseline single-source-of-truth
-├── SPEFinal.docx                  # Final Course Report with Section 8 & all 12 figures
-└── Software Performance Engineering Course.docx # Course report document
+├── CITATION.cff                   # Citation Metadata (CFF 1.2.0)
+├── LICENSE                        # Apache 2.0 Open Source License
+├── requirements.txt               # Reproducible Python dependencies
+├── SPEFinal.docx                  # Final Course Report with native OMML equations
+├── SPEFinal_final.pdf             # Publication-grade PDF Report
+└── SPE_2025-26_Final_Presentation_Janneh_Silvio.pptx # Final Presentation Deck
 ```
 
 ---

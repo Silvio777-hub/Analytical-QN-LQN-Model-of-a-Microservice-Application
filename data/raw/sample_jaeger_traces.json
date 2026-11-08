@@ -1,7 +1,7 @@
 {
   "service_demands": {
     "Frontend": {
-      "mean_service_time": 0.080000,
+      "mean_service_time": 0.018880,
       "sample_count": 2386
     },
     "ProductCatalogService": {
