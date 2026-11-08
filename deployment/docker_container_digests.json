@@ -1,0 +1,87 @@
+{
+  "deployment-jaeger-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-cartservice-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-adservice-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-shippingservice-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-paymentservice-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-emailservice-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-redis-cart-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-productcatalogservice-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-recommendationservice-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-currencyservice-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-checkoutservice-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-prometheus-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-otel-collector-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-loadgenerator-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-frontend-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-grafana-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  },
+  "deployment-cadvisor-1": {
+    "configured_image": "",
+    "image_id": "",
+    "repo_digests": ""
+  }
+}

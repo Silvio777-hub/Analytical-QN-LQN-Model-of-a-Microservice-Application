@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this model, software, or benchmark data, please cite it as below."
+authors:
+  - family-names: "Janneh"
+    given-names: "Silvio"
+    affiliation: "Software Performance Engineering (SPE) Course 2025–2026"
+title: "Analytical QN & LQN Performance Model of a Polyglot Microservice Application"
+version: 2.6.0
+date-released: 2026-10-08
+repository-code: "https://github.com/Silvio777-hub/Analytical-QN-LQN-Model-of-a-Microservice-Application"
+keywords:
+  - "queueing-networks"
+  - "layered-queueing-networks"
+  - "microservices"
+  - "software-performance-engineering"
+  - "docker"
+  - "jaeger"
+  - "mva"
+  - "universal-scalability-law"
+license: "Apache-2.0"
