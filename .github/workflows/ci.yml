@@ -37,6 +37,6 @@ jobs:
         run: |
           python scripts/model/queueing_network.py --arrival-rate 10.0
 
-      - name: Run Master Cross-Consistency Audit
+      - name: Run CI Performance Quality Gate
         run: |
-          python scripts/full_docx_audit.py
+          python scripts/ci_performance_gate.py

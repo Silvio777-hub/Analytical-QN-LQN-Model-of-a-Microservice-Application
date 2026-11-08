@@ -175,10 +175,7 @@ python api/app.py
 │   └── test_solver.py             # Queueing network mathematical solver tests
 ├── CITATION.cff                   # Citation Metadata (CFF 1.2.0)
 ├── LICENSE                        # Apache 2.0 Open Source License
-├── requirements.txt               # Reproducible Python dependencies
-├── SPEFinal.docx                  # Final Course Report with native OMML equations
-├── SPEFinal_final.pdf             # Publication-grade PDF Report
-└── SPE_2025-26_Final_Presentation_Janneh_Silvio.pptx # Final Presentation Deck
+└── requirements.txt               # Reproducible Python dependencies
 ```
 
 ---

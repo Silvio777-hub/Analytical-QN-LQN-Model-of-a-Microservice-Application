@@ -24,3 +24,10 @@ scripts/audit_probe.py
 scripts/audit_deep_dive.py
 scripts/inspect_*.py
 scripts/test_*.py
+# Course Reports & Presentations (local only)
+*.docx
+*.pdf
+*.pptx
+scripts/all_paras.txt
+scripts/equation_para_list.txt
+audit_october/
