@@ -4,8 +4,8 @@
   "parameters": {
     "sigma_contention": 0.0248,
     "kappa_coherency": 0.0031,
-    "base_saturation_capacity_rps": 12.5,
-    "frontend_service_demand_s": 0.08,
+    "base_saturation_capacity_rps": 52.97,
+    "frontend_service_demand_s": 0.01888,
     "nominal_arrival_rate_rps": 10.0,
     "backend_contribution_ms": 5.019,
     "optimal_replica_limit_N_star": 17
@@ -13,80 +13,46 @@
   "sweet_spot_recommendation": {
     "optimal_replicas": 3,
     "usl_efficiency_percent": 93.6,
-    "capacity_expansion_factor": 2.82,
-    "system_latency_ms_at_10rps": 86.9,
+    "capacity_expansion_factor": 2.81,
+    "system_latency_ms_at_10rps": 18.89,
     "system_latency_reduction_percent": 78.5
   },
   "scaling_sweep": [
     {
       "replicas": 1,
-      "relative_capacity": 1.0,
-      "saturation_capacity_rps": 12.5,
+      "saturation_capacity_rps": 52.97,
       "efficiency_percent": 100.0,
-      "system_response_time_ms": 405.0
+      "system_response_time_ms": 23.27
     },
     {
       "replicas": 2,
-      "relative_capacity": 1.94,
-      "saturation_capacity_rps": 24.25,
+      "saturation_capacity_rps": 102.75,
       "efficiency_percent": 97.0,
-      "system_response_time_ms": 100.3
+      "system_response_time_ms": 19.05
     },
     {
       "replicas": 3,
-      "relative_capacity": 2.81,
-      "saturation_capacity_rps": 35.11,
+      "saturation_capacity_rps": 148.75,
       "efficiency_percent": 93.6,
-      "system_response_time_ms": 86.9
+      "system_response_time_ms": 18.89
     },
     {
       "replicas": 4,
-      "relative_capacity": 3.6,
-      "saturation_capacity_rps": 44.98,
+      "saturation_capacity_rps": 190.59,
       "efficiency_percent": 90.0,
-      "system_response_time_ms": 85.3
+      "system_response_time_ms": 18.88
     },
     {
       "replicas": 5,
-      "relative_capacity": 4.31,
-      "saturation_capacity_rps": 53.82,
+      "saturation_capacity_rps": 228.06,
       "efficiency_percent": 86.1,
-      "system_response_time_ms": 85.0
+      "system_response_time_ms": 18.88
     },
     {
       "replicas": 6,
-      "relative_capacity": 4.93,
-      "saturation_capacity_rps": 61.63,
+      "saturation_capacity_rps": 261.13,
       "efficiency_percent": 82.2,
-      "system_response_time_ms": 85.0
-    },
-    {
-      "replicas": 7,
-      "relative_capacity": 5.47,
-      "saturation_capacity_rps": 68.41,
-      "efficiency_percent": 78.2,
-      "system_response_time_ms": 85.0
-    },
-    {
-      "replicas": 8,
-      "relative_capacity": 5.94,
-      "saturation_capacity_rps": 74.23,
-      "efficiency_percent": 74.2,
-      "system_response_time_ms": 85.0
-    },
-    {
-      "replicas": 9,
-      "relative_capacity": 6.33,
-      "saturation_capacity_rps": 79.14,
-      "efficiency_percent": 70.3,
-      "system_response_time_ms": 85.0
-    },
-    {
-      "replicas": 10,
-      "relative_capacity": 6.66,
-      "saturation_capacity_rps": 83.21,
-      "efficiency_percent": 66.6,
-      "system_response_time_ms": 85.0
+      "system_response_time_ms": 18.88
     }
   ]
 }
