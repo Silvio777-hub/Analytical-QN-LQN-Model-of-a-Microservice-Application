@@ -25,6 +25,7 @@ scripts/audit_deep_dive.py
 scripts/forensic_audit.py
 scripts/inspect_*.py
 scripts/test_*.py
+scripts/*explanation*.py
 # Course Reports & Presentations (local only)
 *.docx
 *.pdf
