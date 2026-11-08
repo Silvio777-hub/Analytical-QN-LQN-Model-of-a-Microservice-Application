@@ -33,7 +33,7 @@
       "id": "GATE-04",
       "name": "Downstream Bottleneck Invariance",
       "description": "Verifies frontend remains the sole structural bottleneck (D_0 = V_0*S_0 > max D_downstream).",
-      "measured": "Max downstream demand 2.31 ms (ratio: 12.25%)",
+      "measured": "Max downstream demand 1.41 ms (ratio: 7.45%)",
       "threshold": "< 18.88 ms (ratio < 100%)",
       "status": "PASS",
       "passed": true
@@ -50,15 +50,15 @@
   ],
   "demands_analyzed": {
     "frontend": 18.880231349538978,
-    "productcatalogservice": 0.5444442740286298,
-    "currencyservice": 1.1998173302107726,
-    "cartservice": 57.94214383561644,
-    "recommendationservice": 6.679170297029704,
-    "adservice": 33.671549999999996,
-    "checkoutservice": 45.05520952380952,
-    "shippingservice": 8.854446666666666,
-    "paymentservice": 8.296294117647058,
-    "emailservice": 3.256267326732673,
+    "productcatalogservice": 0.32419567979669633,
+    "currencyservice": 1.6027269503546098,
+    "cartservice": 35.22903619909502,
+    "recommendationservice": 3.8279009900990095,
+    "adservice": 19.881936708860756,
+    "checkoutservice": 33.52247983870968,
+    "shippingservice": 13.444778625954202,
+    "paymentservice": 47.94235416666667,
+    "emailservice": 1.292536842105263,
     "redis": 2.0
   },
   "predictions_analyzed": {

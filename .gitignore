@@ -22,6 +22,7 @@ scratch_docx_dump.txt
 scripts/check_provenance.py
 scripts/audit_probe.py
 scripts/audit_deep_dive.py
+scripts/forensic_audit.py
 scripts/inspect_*.py
 scripts/test_*.py
 # Course Reports & Presentations (local only)
