@@ -26,10 +26,16 @@ scripts/forensic_audit.py
 scripts/inspect_*.py
 scripts/test_*.py
 scripts/*explanation*.py
+scripts/*repair*.py
+scripts/*spefinal*.py
+scripts/*bullet*.py
+scripts/*omath*.py
 # Course Reports & Presentations (local only)
 *.docx
 *.pdf
 *.pptx
+results/figures/explanation/
+scripts/export_docx_to_pdf.py
 scripts/all_paras.txt
 scripts/equation_para_list.txt
 audit_october/

@@ -43,14 +43,29 @@ SERVICE_NAMES = [
     "PaymentService", "EmailService", "Redis"
 ]
 
-CANONICAL_DEMANDS = [
-    0.0800, 0.0050, 0.0030, 0.0040, 0.0075, 0.0058,
-    0.0145, 0.0038, 0.0095, 0.0115, 0.0020
-]
+def _load_canonical_demands():
+    params_file = os.path.join(PROJECT_ROOT, "scripts", "model", "queueing_network_parameters.json")
+    if os.path.exists(params_file):
+        try:
+            with open(params_file, "r", encoding="utf-8") as f:
+                p = json.load(f)
+            st = p.get("service_times")
+            if st and len(st) == len(SERVICE_NAMES):
+                return st
+        except Exception:
+            pass
+    return [
+        0.01888023134953898, 0.00032419567979669636, 0.0016027269503546097,
+        0.035229036199095023, 0.0038279009900990097, 0.019881936708860758,
+        0.03352247983870968, 0.013444778625954201, 0.047942354166666666,
+        0.001292536842105263, 0.002000
+    ]
+
+CANONICAL_DEMANDS = _load_canonical_demands()
 
 VISIT_RATIOS = [
-    1.000, 1.850, 0.920, 0.750, 0.400, 0.250,
-    0.200, 0.240, 0.060, 0.040, 0.713
+    1.0000, 0.6369, 0.2771, 0.0399, 0.0898, 0.0218,
+    0.0367, 0.0142, 0.0051, 0.0051, 0.0379
 ]
 
 

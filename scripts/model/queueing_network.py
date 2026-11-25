@@ -58,101 +58,77 @@ K = len(SERVICE_NAMES)  # 11 service centres
 
 def get_default_service_times() -> list[float]:
     """
-    Canonical model service times (in seconds) matching Table 5 in report.
-    - Frontend: 80.00 ms (LQN-demarcated CPU demand)
-    - ProductCatalogService: 5.00 ms
-    - CurrencyService: 3.00 ms
-    - CartService: 4.00 ms (estimated from code analysis) (exclusive CPU, Redis wait subtracted)
-    - RecommendationService: 7.50 ms
-    - AdService: 5.80 ms
-    - CheckoutService: 14.50 ms
-    - ShippingService: 3.80 ms
-    - PaymentService: 9.50 ms
-    - EmailService: 11.50 ms
+    Canonical model service times (in seconds) matching Table 5 and Table 12 in report.
+    Derived empirically from Jaeger distributed trace spans (2,386 spans):
+    - Frontend: 18.88 ms (exclusive CPU demand)
+    - ProductCatalogService: 0.32 ms
+    - CurrencyService: 1.60 ms
+    - CartService: 35.23 ms
+    - RecommendationService: 3.83 ms
+    - AdService: 19.88 ms
+    - CheckoutService: 33.52 ms
+    - ShippingService: 13.44 ms
+    - PaymentService: 47.94 ms
+    - EmailService: 1.29 ms
     - Redis: 2.00 ms
     """
+    params_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "queueing_network_parameters.json")
+    if os.path.exists(params_file):
+        try:
+            with open(params_file, "r", encoding="utf-8") as f:
+                p = json.load(f)
+            if "service_times" in p and len(p["service_times"]) == K:
+                return p["service_times"]
+        except Exception:
+            pass
+
     return [
-        0.080000,  # Frontend (Gateway)
-        0.005000,  # ProductCatalogService
-        0.003000,  # CurrencyService
-        0.004000,  # CartService
-        0.007500,  # RecommendationService
-        0.005800,  # AdService
-        0.014500,  # CheckoutService
-        0.003800,  # ShippingService
-        0.009500,  # PaymentService
-        0.011500,  # EmailService
+        0.01888023134953898,  # Frontend (Gateway)
+        0.00032419567979669636,  # ProductCatalogService
+        0.0016027269503546097,  # CurrencyService
+        0.035229036199095023,  # CartService
+        0.0038279009900990097,  # RecommendationService
+        0.019881936708860758,  # AdService
+        0.03352247983870968,  # CheckoutService
+        0.013444778625954201,  # ShippingService
+        0.047942354166666666,  # PaymentService
+        0.001292536842105263,  # EmailService
         0.002000,  # Redis State Store
     ]
 
 
 def get_default_routing_matrix() -> np.ndarray:
     """
-    Default routing matrix based on Online Boutique request flow (11 services).
-
-    The routing is derived from analyzing the application's source code
-    and the typical user journey:
-      1. User browses homepage → Frontend fans out to ProductCatalog,
-         Currency, Recommendation, Ad, Checkout, Shipping
-      2. User views product   → Frontend calls ProductCatalog, Currency
-      3. User adds to cart    → Frontend calls Cart → Redis
-      4. User checks out      → Frontend calls Checkout, which orchestrates
-         calls to ProductCatalog, Currency, Cart, Shipping, Payment,
-         Email
-      5. No Auth or Notification services in this model
-
-
-    Routing probabilities represent the fraction of requests leaving
-    service i that go to service j. Remaining probability exits the system.
-    Row sums must be < 1 (remainder exits the network).
-
-    11-node index map:
-      0  Frontend
-      1  ProductCatalogService
-      2  CurrencyService
-      3  CartService
-      4  RecommendationService
-      5  AdService
-      6  CheckoutService
-      7  ShippingService
-      8  PaymentService
-      9  EmailService
-      10 Redis
+    Default routing matrix matching Table 5 visit ratios and queueing_network_parameters.json.
     """
+    params_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "queueing_network_parameters.json")
+    if os.path.exists(params_file):
+        try:
+            with open(params_file, "r", encoding="utf-8") as f:
+                p = json.load(f)
+            if "routing_matrix" in p:
+                mat = np.array(p["routing_matrix"])
+                if mat.shape == (K, K):
+                    return mat
+        except Exception:
+            pass
+
     P = np.zeros((K, K))
-
-    # ── Frontend (0) ──────────────────────────────────────────────────────────
-    # Page-mix: browse(35%), product-detail(20%), cart(13%),
-    #           checkout(4%), shipping-estimate(4%), ads(5%)
-    P[0][1] = 0.30  # → ProductCatalogService  (browse + product pages)
-    P[0][2] = 0.18  # → CurrencyService         (price display)
-    P[0][3] = 0.13  # → CartService             (cart operations)
-    P[0][4] = 0.08  # → RecommendationService   (homepage widgets)
-    P[0][5] = 0.05  # → AdService               (banner ads)
-    P[0][6] = 0.04  # → CheckoutService         (checkout page)
-    P[0][7] = 0.04  # → ShippingService         (cart shipping estimate)
-    # Remaining 0.18 exits (search, auth, static assets, etc.)
-
-    # ── CartService (3) → Redis ───────────────────────────────────────────────
-    P[3][10] = 0.95  # Almost all cart ops touch Redis for state
-
-    # ── RecommendationService (4) → ProductCatalogService ────────────────────
-    P[4][1] = 0.80  # Fetches product list to filter recommendations
-
-    # ── CheckoutService (6) – multi-step orchestration ────────────────────────
-    # Row sum = 0.13*4 + 0.18 + 0.13 = 0.78  (exits with order response)
-    P[6][1] = 0.13  # → ProductCatalogService  (fetch item details)
-    P[6][2] = 0.13  # → CurrencyService         (convert totals)
-    P[6][3] = 0.13  # → CartService             (read + empty cart)
-    P[6][7] = 0.13  # → ShippingService         (final shipping cost)
-    P[6][8] = 0.18  # → PaymentService          (charge card)
-    P[6][9] = 0.13  # → EmailService            (order confirmation)
-    # No notification service in 11‑service model
-
-    # Terminal services (respond without further internal routing)
-    # ProductCatalogService (1), CurrencyService (2), AdService (5),
-    # ShippingService (7), PaymentService (8), EmailService (9), Redis (10)
-
+    P[0][1] = 0.5337  # Frontend -> ProductCatalogService
+    P[0][2] = 0.2742  # Frontend -> CurrencyService
+    P[0][3] = 0.0348  # Frontend -> CartService
+    P[0][4] = 0.0898  # Frontend -> RecommendationService
+    P[0][5] = 0.0218  # Frontend -> AdService
+    P[0][6] = 0.0367  # Frontend -> CheckoutService
+    P[0][7] = 0.0091  # Frontend -> ShippingService
+    P[3][10] = 0.9500 # CartService -> Redis
+    P[4][1] = 1.0000  # RecommendationService -> ProductCatalogService
+    P[6][1] = 0.3658  # CheckoutService -> ProductCatalogService
+    P[6][2] = 0.0800  # CheckoutService -> CurrencyService
+    P[6][3] = 0.1391  # CheckoutService -> CartService
+    P[6][7] = 0.1391  # CheckoutService -> ShippingService
+    P[6][8] = 0.1384  # CheckoutService -> PaymentService
+    P[6][9] = 0.1377  # CheckoutService -> EmailService
     return P
 
 
@@ -213,19 +189,8 @@ def load_empirical_data(data_dir: str) -> tuple:
     for i, name in enumerate(SERVICE_NAMES):
         if name in raw_st and raw_st[name] > 0:
             s_live = raw_st[name]
-            # ── LQN Demarcation Correction for Frontend ──────────────────────
-            # parse_traces.py computes exclusive span time (total span minus child wait).
-            # For Frontend, this underestimates true CPU demand when downstream services
-            # don't emit full traces. The frozen benchmark LQN demarcation:
-            #   S_fe = R_gross - sum(child_R) = 285ms - 205ms = 80ms.
-            # We use the frozen value if live exclusive time is implausibly low (<30ms).
-            if name == "Frontend" and s_live < 0.030:
-                print(f"  [LQN correction] Frontend live={s_live*1000:.2f}ms is raw exclusive span.")
-                print(f"  [LQN correction] Applying frozen LQN-demarcated value: 80.00ms")
-                service_times.append(0.080000)
-            else:
-                service_times.append(s_live)
-                print(f"  {name:<25} live={s_live*1000:.3f}ms")
+            service_times.append(s_live)
+            print(f"  {name:<25} live={s_live*1000:.3f}ms")
         else:
             print(f"  Warning: No live data for {name:<25} using default={defaults[i]*1000:.1f}ms")
             service_times.append(defaults[i])

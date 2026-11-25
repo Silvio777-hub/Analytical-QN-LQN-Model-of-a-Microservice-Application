@@ -78,13 +78,13 @@ def compute_usl_profile():
     """
     np.random.seed(42)  # reproducibility — ensures deterministic output
 
-    # ── Model parameters (report Table 3) ──────────────────────────────────
+    # ── Model parameters (report Table 5 / Table 8 / Table 12) ───────────
     sigma = 0.0248           # Amdahl serialisation coefficient
     kappa = 0.0031           # Coherency crosstalk coefficient
-    base_saturation_rps = 12.5   # Single-pod saturation: 1 / S0
-    S0 = 0.080               # Frontend exclusive service demand (seconds)
+    S0 = 0.01888             # Frontend exclusive CPU service demand (18.88 ms)
+    base_saturation_rps = round(1.0 / S0, 2)  # Single-pod saturation capacity: 52.97 req/s
     lambda_nom = 10.0        # Nominal operating arrival rate (req/s)
-    backend_ms = 5.019       # Backend Sigma(V_i * R_i) at 10 req/s (ms)
+    backend_ms = 4.62        # Backend Sigma(V_i * R_i) at 10 req/s (ms)
 
     replicas = list(range(1, 11))
     capacities = []

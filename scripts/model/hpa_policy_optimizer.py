@@ -26,11 +26,11 @@ import matplotlib.pyplot as plt
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-# Canonical architectural parameters
-S_0_SEC = 0.080  # 80 ms frontend service demand
-LAMBDA_SAT_SINGLE = 1.0 / S_0_SEC  # 12.5 req/s
-SLA_RT_MS = 500.0  # Hard SLA limit
-SLA_TARGET_MS = 250.0  # Operational target (50% SLA headroom)
+# Canonical architectural parameters (matching report Table 5, Table 12, Table 14)
+S_0_SEC = 0.01888  # 18.88 ms frontend exclusive CPU service demand
+LAMBDA_SAT_SINGLE = 1.0 / S_0_SEC  # 52.97 req/s single-replica saturation ceiling
+SLA_RT_MS = 125.0  # Hard SLA limit
+SLA_TARGET_MS = 56.65  # Operational target yields rho* = 1 - 18.88/56.65 = 66.7%
 
 # Cloud pricing parameters (GCP / AWS standard microservice pricing)
 COST_PER_VCPU_HR = 0.0445
@@ -77,10 +77,10 @@ def compute_multi_replica_metrics(max_replicas=5):
     for c in range(1, max_replicas + 1):
         # Saturation capacity
         cap_sat = c * LAMBDA_SAT_SINGLE
-        # Safe SLA capacity (R <= 500ms)
-        cap_sla = c * (1.0 - (S_0_SEC / 0.500)) * LAMBDA_SAT_SINGLE
-        # Recommended operational capacity (R <= 250ms)
-        cap_safe = c * (1.0 - (S_0_SEC / 0.250)) * LAMBDA_SAT_SINGLE
+        # Safe SLA capacity (R <= SLA_RT_MS)
+        cap_sla = c * (1.0 - (S_0_SEC / (SLA_RT_MS / 1000.0))) * LAMBDA_SAT_SINGLE
+        # Recommended operational capacity (R <= SLA_TARGET_MS)
+        cap_safe = c * (1.0 - (S_0_SEC / (SLA_TARGET_MS / 1000.0))) * LAMBDA_SAT_SINGLE
 
         monthly_cost = CLUSTER_OVERHEAD_MONTHLY + (c * per_pod_monthly_cost)
         cost_per_rps_capacity = monthly_cost / cap_sla
@@ -88,8 +88,9 @@ def compute_multi_replica_metrics(max_replicas=5):
         replica_configs.append({
             "replicas": c,
             "saturation_capacity_rps": round(cap_sat, 2),
+            "sla_capacity_rps": round(cap_sla, 2),
+            "operational_capacity_rps": round(cap_safe, 2),
             "sla_capacity_500ms_rps": round(cap_sla, 2),
-            "operational_capacity_250ms_rps": round(cap_safe, 2),
             "monthly_cost_usd": round(monthly_cost, 2),
             "cost_per_rps_capacity_usd": round(cost_per_rps_capacity, 2)
         })

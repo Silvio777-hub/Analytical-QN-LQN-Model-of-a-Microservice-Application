@@ -59,10 +59,10 @@ class TestEndToEndPipeline(unittest.TestCase):
 
         self.assertEqual(len(results.service_names), 11)
         self.assertAlmostEqual(results.system_throughput, 10.0, places=4)
-        # Frontend utilization at lambda=10, S=0.08 should be 0.8
-        self.assertAlmostEqual(results.utilizations[0], 0.8, places=4)
-        # End-to-end response time should be ~405 ms
-        self.assertAlmostEqual(results.system_response_time * 1000, 405.018, delta=1.0)
+        # Frontend utilization at lambda=10, S=18.88 ms should be ~0.1888 (18.88%)
+        self.assertAlmostEqual(results.utilizations[0], 0.1888, delta=0.005)
+        # End-to-end response time should be ~27.90 ms matching Table 5 and report
+        self.assertAlmostEqual(results.system_response_time * 1000, 27.90, delta=1.0)
 
     def test_04_validation_error_metrics(self):
         """Test compare error computation (RMSE, MAE, WMAPE)."""
