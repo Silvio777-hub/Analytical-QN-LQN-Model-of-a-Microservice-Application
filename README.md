@@ -28,17 +28,17 @@ The application consists of 11 distinct microservices deployed in Docker contain
 
 | Node Index | Microservice | Implementation Language | Intrinsic Demand $S_i$ (ms) | Visit Ratio $V_i$ | Primary Downstream Dependencies |
 | :---: | :--- | :---: | :---: | :---: | :--- |
-| **0** | **Frontend** *(Bottleneck)* | Go | **18.88** | 1.000 | ProductCatalog, Currency, Cart, Recommendation, Ad, Checkout |
-| **1** | ProductCatalogService | Go | 5.00 | 1.850 | None (Leaf node) |
-| **2** | CurrencyService | Node.js | 3.00 | 0.920 | None (Leaf node) |
-| **3** | CartService | C# / .NET | 4.00 | 0.750 | Redis State Store |
-| **4** | RecommendationService | Python | 7.50 | 0.400 | ProductCatalogService |
-| **5** | AdService | Java | 5.80 | 0.250 | None (Leaf node) |
-| **6** | CheckoutService | Go | 14.50 | 0.200 | ProductCatalog, Currency, Cart, Shipping, Payment, Email |
-| **7** | ShippingService | Go | 3.80 | 0.240 | None (Leaf node) |
-| **8** | PaymentService | Node.js | 9.50 | 0.060 | None (Leaf node) |
-| **9** | EmailService | Python | 11.50 | 0.040 | None (Leaf node) |
-| **10** | Redis (State Store) | C | 2.00 | 0.713 | None (Leaf node) |
+| **0** | **Frontend** *(Bottleneck)* | Go | **18.88** | 1.0000 | ProductCatalog, Currency, Cart, Recommendation, Ad, Checkout |
+| **1** | ProductCatalogService | Go | 0.32 | 0.6369 | None (Leaf node) |
+| **2** | CurrencyService | Node.js | 1.60 | 0.2771 | None (Leaf node) |
+| **3** | CartService | C# / .NET | 35.23 | 0.0399 | Redis State Store |
+| **4** | RecommendationService | Python | 3.83 | 0.0898 | ProductCatalogService |
+| **5** | AdService | Java | 19.88 | 0.0218 | None (Leaf node) |
+| **6** | CheckoutService | Go | 33.52 | 0.0367 | ProductCatalog, Currency, Cart, Shipping, Payment, Email |
+| **7** | ShippingService | Go | 13.44 | 0.0142 | None (Leaf node) |
+| **8** | PaymentService | Node.js | 47.94 | 0.0051 | None (Leaf node) |
+| **9** | EmailService | Python | 1.29 | 0.0051 | None (Leaf node) |
+| **10** | Redis (State Store) | C | 2.00 | 0.0379 | None (Leaf node) |
 
 ---
 
@@ -89,7 +89,7 @@ Located in [`scripts/ci_performance_gate.py`](scripts/ci_performance_gate.py) an
 
 ### 3. Mathematical HPA Autoscaler & Cost Optimizer
 Located in [`scripts/model/hpa_policy_optimizer.py`](scripts/model/hpa_policy_optimizer.py):
-- Calculates the optimal CPU utilization threshold before queue collapse ($66.6\%$).
+- Calculates the optimal CPU utilization threshold before queue collapse ($66.7\%$).
 - Generates Pareto-optimal multi-replica capacity-cost frontiers ($c=3$ is optimal).
 
 ---
